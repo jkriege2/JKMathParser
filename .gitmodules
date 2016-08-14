@@ -1,0 +1,4 @@
+[submodule "StatisticsTools"]
+	path = StatisticsTools
+	url = https://github.com/jkriege2/StatisticsTools
+	branch = master
