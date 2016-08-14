@@ -19,7 +19,7 @@
 #ifndef JKMATHPARSERTOOLS_H
 #define JKMATHPARSERTOOLS_H
 
-#include "jkmathparserlib_imexport.h"
+#include "jkmplib_imexport.h"
 //#include "qftools.h"
 #include <cmath>
 #include <iostream>
@@ -31,8 +31,8 @@
 #include <stack>
 #include "extlibs/MersenneTwister.h"
 #include <stdint.h>
-#include "jkmathparserbase.h"
-#include "jkmathparserstringtools.h"
+#include "jkmpbase.h"
+#include "jkmpstringtools.h"
 
 class JKMathParser; // forward
 
@@ -94,8 +94,8 @@ struct JKMPLIB_EXPORT jkmpResult {
         jkmpResult(unsigned int value);
         jkmpResult(JKMP::string value);
         jkmpResult(bool value);
-        jkmpResult(const JKMP::vector<double> &value);
-        jkmpResult(const JKMP::vector<bool> &value);
+        jkmpResult(const std::vector<double> &value);
+        jkmpResult(const std::vector<bool> &value);
         jkmpResult(const JKMP::stringVector &value);
         jkmpResult(const jkmpResult &value);
         JKMPLIB_EXPORT jkmpResult& operator=(const jkmpResult &value);
@@ -114,8 +114,8 @@ struct JKMPLIB_EXPORT jkmpResult {
         JKMPLIB_EXPORT int32_t toInteger() const;
         /** \brief convert the value this struct to an integer */
         JKMPLIB_EXPORT uint32_t toUInt() const;
-        JKMPLIB_EXPORT JKMP::vector<uint32_t> toUIntVector() const;
-        JKMPLIB_EXPORT JKMP::vector<int32_t> toIntVector() const;
+        JKMPLIB_EXPORT std::vector<uint32_t> toUIntVector() const;
+        JKMPLIB_EXPORT std::vector<int32_t> toIntVector() const;
         /** \brief is this result convertible to integer? */
         inline bool isInteger() const {
             return (type==jkmpDouble)&&(fabs(num)<4294967296.0)&&(num==round(num));
@@ -124,20 +124,22 @@ struct JKMPLIB_EXPORT jkmpResult {
         inline bool isUInt() const {
             return (type==jkmpDouble)&&(fabs(num)<2147483648.0)&&(num>=0)&&(num==round(num));
         }
-        /** \brief returns the size of the result (number of characters for string, numbers of entries in vectors, 0 for void and 1 else) */
-        JKMPLIB_EXPORT int length() const;
+        /** \brief returns the size of the result (number of characters for string, numbers of entries in vectors, 0 for void and 1 else), same as size() */
+        JKMPLIB_EXPORT size_t length() const;
+        /** \brief returns the size of the result (number of characters for string, numbers of entries in vectors, 0 for void and 1 else), same as length() */
+        JKMPLIB_EXPORT size_t size() const;
         /** \brief returns \c true, if the datatype is a matrix */
         JKMPLIB_EXPORT int dimensions() const;
         /** \brief for a mtrix, returns the x-size/number of columns */
-        JKMPLIB_EXPORT int sizeX() const;
+        JKMPLIB_EXPORT size_t sizeX() const;
         /** \brief for a mtrix, returns the y-size/number of rows */
-        JKMPLIB_EXPORT int sizeY() const;
+        JKMPLIB_EXPORT size_t sizeY() const;
         /** \brief for a mtrix, returns the x-size/number of columns */
-        inline int columns() const {
+        inline size_t columns() const {
             return sizeX();
         }
         /** \brief for a mtrix, returns the y-size/number of rows */
-        inline int rows() const {
+        inline size_t rows() const {
             return sizeY();
         }
         /** \brief returns the number of dimensions in the datatype */
@@ -174,31 +176,31 @@ struct JKMPLIB_EXPORT jkmpResult {
 
         JKMPLIB_EXPORT void setDouble(double val);
         JKMPLIB_EXPORT void setBoolean(bool val);
-        JKMPLIB_EXPORT void setString(const JKMP::string& val);
+        JKMPLIB_EXPORT void setString(const std::string& val);
         JKMPLIB_EXPORT void setString(int size=0, char defaultChar=char(' '));
-        JKMPLIB_EXPORT void setDoubleVec(const JKMP::vector<double>& val);
+        JKMPLIB_EXPORT void setDoubleVec(const std::vector<double>& val);
         JKMPLIB_EXPORT void setDoubleVec(int size=0, double defaultVal=0.0);
         JKMPLIB_EXPORT void setDoubleMatrix(int size=0, int cols=1, double  defaultVal=0);
         template <typename T>
-        inline void setDoubleVec(T* data, int size) {
+        inline void setDoubleVec(T* data, size_t size) {
             setDoubleVec(size,0.0);
-            for (int i=0; i<size; i++) {
+            for (size_t i=0; i<size; i++) {
                 numVec[i]=double(data[i]);
             }
         }
 
         JKMPLIB_EXPORT void setStruct(const JKMP::stringVector& items=JKMP::stringVector());
         JKMPLIB_EXPORT void setList(int items=0);
-        JKMPLIB_EXPORT void setList(const JKMP::vector<jkmpResult>& dat);
+        JKMPLIB_EXPORT void setList(const std::vector<jkmpResult>& dat);
 
-        JKMPLIB_EXPORT void setBoolVec(const JKMP::vector<bool>& val);
+        JKMPLIB_EXPORT void setBoolVec(const std::vector<bool>& val);
         JKMPLIB_EXPORT void setBoolVec(int size=0, bool defaultVal=false);
         JKMPLIB_EXPORT void setBoolMatrix(int size=0, int cols=1, bool defaultVal=false);
 
         template <typename T>
-        inline void setBoolVec(T* data, int size) {
+        inline void setBoolVec(T* data, size_t size) {
             setBoolVec(size);
-            for (int i=0; i<size; i++) {
+            for (size_t i=0; i<size; i++) {
                 boolVec[i]=bool(data[i]);
             }
         }
@@ -208,19 +210,19 @@ struct JKMPLIB_EXPORT jkmpResult {
 
 
         template <typename T>
-        inline void setStringVec(T* data, int size) {
+        inline void setStringVec(T* data, size_t size) {
             setStringVec(size);
-            for (int i=0; i<size; i++) {
+            for (size_t i=0; i<size; i++) {
                 strVec[i]=data[i];
             }
         }
         /** \brief converst the result to a vector of number (numbers and number vectors are converted!) */
-        JKMPLIB_EXPORT JKMP::vector<double> asVector() const;
+        JKMPLIB_EXPORT std::vector<double> asVector() const;
 
         /** \brief converst the result to a vector of number (numbers and number vectors are converted!) */
         JKMPLIB_EXPORT JKMP::stringVector asStrVector() const;
         /** \brief converst the result to a vector of number (numbers and number vectors are converted!) */
-        JKMPLIB_EXPORT JKMP::vector<bool> asBoolVector() const;
+        JKMPLIB_EXPORT std::vector<bool> asBoolVector() const;
         /** \brief returns \c true, if the result may be converted to a vector of number */
         JKMPLIB_EXPORT bool  convertsToVector() const;
         /** \brief returns \c true, if the result may be converted to a vector of number */
@@ -228,7 +230,7 @@ struct JKMPLIB_EXPORT jkmpResult {
         /** \brief returns \c true, if the result may be converted to a vector of number */
         JKMPLIB_EXPORT bool  convertsToStringVector() const;
         /** \brief converst the result to a vector of integers (numbers and number vectors are converted!) */
-        JKMPLIB_EXPORT JKMP::vector<int> asIntVector() const;
+        JKMPLIB_EXPORT std::vector<int> asIntVector() const;
         /** \brief returns \c true, if the result may be converted to a vector of integers */
         inline bool  convertsToIntVector() const {
             return convertsToVector();
@@ -384,7 +386,7 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
         r.setDouble(CFUNC(params[0].num));\
     } else if(params[0].type==jkmpDoubleVector) {\
         r.setDoubleVec(params[0].numVec.size());\
-        for (int i=0; i<params[0].numVec.size(); i++) {\
+        for (size_t i=0; i<params[0].numVec.size(); i++) {\
             r.numVec[i]=CFUNC(params[0].numVec[i]);\
         }\
     } else {\
@@ -399,7 +401,7 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
 
 
 /*! \brief This macro allows to easily define functions for JKMathParser from a C-function that
-           is numeric_vector->numeric_vector (JKMP::vector<double> -> JKMP::vector<double>)
+           is numeric_vector->numeric_vector (std::vector<double> -> std::vector<double>)
 
     The resulting function will:
       - check the number of arguments and their type
@@ -463,7 +465,7 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
 
 
 /*! \brief This macro allows to easily define functions for JKMathParser from a C-function that
-           is numeric_vector->numeric (JKMP::vector<double> -> double), e.g. qfstatisticsMedian()
+           is numeric_vector->numeric (std::vector<double> -> double), e.g. qfstatisticsMedian()
 
     The resulting function will:
       - check the number of arguments and their type
@@ -490,12 +492,40 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
     return; \
 }
 
+/*! \brief This macro allows to easily define functions for JKMathParser from a C-function that
+           is (double*,size_t)->numeric (std::vector<double> -> double), e.g. qfstatisticsMedian()
+
+    The resulting function will:
+      - check the number of arguments and their type
+      - apply the C-function to the argument
+    .
+
+    \param FName name of the function to declare
+    \param NAME_IN_PARSER name the function should have in the parser (used for error messages only)
+    \param CFUNC name of the C function to call
+*/
+#define JKMATHPARSER_DEFINE_1PARAM_VECTONUM_CFUNC(FName, NAME_IN_PARSER, CFUNC) \
+static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p){\
+    if (n!=1) {\
+        p->jkmpError(JKMP::_("%1(x) needs exacptly 1 argument").arg(#NAME_IN_PARSER));\
+        r.setInvalid();\
+        return; \
+    }\
+    if(params[0].type==jkmpDoubleVector) {\
+        r.setDouble(CFUNC(params[0].numVec.data(), params[0].numVec.size()));\
+    } else {\
+        p->jkmpError(JKMP::_("%1(x) argument has to be a vector of numbers").arg(#NAME_IN_PARSER));\
+        r.setInvalid();\
+    }\
+    return; \
+}
+
 
 
 /*! \brief This macro allows to easily define functions for JKMathParser from a C-function that
-           is numeric_vector->numeric (JKMP::vector<double> -> double), e.g. qfstatisticsMedian()
+           is numeric_vector->numeric (std::vector<double> -> double), e.g. qfstatisticsMedian()
 
-    This variant also accepts a single double-number and converts it to a JKMP::vector<double> before evaluating the function.
+    This variant also accepts a single double-number and converts it to a std::vector<double> before evaluating the function.
 
     The resulting function will:
       - check the number of arguments and their type
@@ -516,7 +546,7 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
     if(params[0].type==jkmpDoubleVector) {\
         r.setDouble(CFUNC(params[0].numVec));\
     } if(params[0].type==jkmpDouble) {\
-        r.setDouble(CFUNC(constructJKMP::vectorFromItems<double>(params[0].num)));\
+        r.setDouble(CFUNC(JKMP::vector<double>::construct(params[0].num)));\
     } else {\
         p->jkmpError(JKMP::_("%1(x) argument has to be a vector of numbers or a number").arg(#NAME_IN_PARSER));\
         r.setInvalid();\
@@ -525,11 +555,44 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
 }
 
 
+/*! \brief This macro allows to easily define functions for JKMathParser from a C-function that
+           is (double*,size_t)->numeric (std::vector<double> -> double), e.g. qfstatisticsMedian()
+
+    This variant also accepts a single double-number and converts it to a std::vector<double> before evaluating the function.
+
+    The resulting function will:
+      - check the number of arguments and their type
+      - apply the C-function to the argument
+    .
+
+    \param FName name of the function to declare
+    \param NAME_IN_PARSER name the function should have in the parser (used for error messages only)
+    \param CFUNC name of the C function to call
+*/
+#define JKMATHPARSER_DEFINE_1PARAM_VECORNUMTONUM_CFUNC(FName, NAME_IN_PARSER, CFUNC) \
+static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p){\
+    if (n!=1) {\
+        p->jkmpError(JKMP::_("%1(x) needs exacptly 1 argument").arg(#NAME_IN_PARSER));\
+        r.setInvalid();\
+        return; \
+    }\
+    if(params[0].type==jkmpDoubleVector) {\
+        r.setDouble(CFUNC(params[0].numVec.data(), params[0].numVec.size()));\
+    } if(params[0].type==jkmpDouble) {\
+        JKMP::vector<double> d(1, params[0].num); \
+        r.setDouble(CFUNC(d.data(), d.size()));\
+    } else {\
+        p->jkmpError(JKMP::_("%1(x) argument has to be a vector of numbers or a number").arg(#NAME_IN_PARSER));\
+        r.setInvalid();\
+    }\
+    return; \
+}
+
 
 /*! \brief This macro allows to easily define functions for JKMathParser from a C-function that
-           is numeric_vector->numeric (JKMP::vector<double> -> double), e.g. qfstatisticsMedian()
+           is numeric_vector->numeric (std::vector<double> -> double), e.g. qfstatisticsMedian()
 
-    This variant also accepts a single double-number, or a list of numbers and converts it to a JKMP::vector<double> before evaluating the function.
+    This variant also accepts a single double-number, or a list of numbers and converts it to a std::vector<double> before evaluating the function.
 
     The resulting function will:
       - check the number of arguments and their type
@@ -570,6 +633,53 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
     return; \
 }
 
+
+/*! \brief This macro allows to easily define functions for JKMathParser from a C-function that
+           is (double*,size_t)->numeric (std::vector<double> -> double), e.g. qfstatisticsMedian()
+
+    This variant also accepts a single double-number, or a list of numbers and converts it to a std::vector<double> before evaluating the function.
+
+    The resulting function will:
+      - check the number of arguments and their type
+      - apply the C-function to the argument
+    .
+
+    \param FName name of the function to declare
+    \param NAME_IN_PARSER name the function should have in the parser (used for error messages only)
+    \param CFUNC name of the C function to call
+*/
+#define JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_CFUNC(FName, NAME_IN_PARSER, CFUNC) \
+static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p){\
+    if (n<1) {\
+        p->jkmpError(JKMP::_("%1(x1, x2, ...) needs at least 1 argument").arg(#NAME_IN_PARSER));\
+        r.setInvalid();\
+        return; \
+    }\
+    if(n==1 && params[0].type==jkmpDoubleVector) {\
+        r.setDouble(CFUNC(params[0].numVec.data(), params[0].numVec.size()));\
+    } if( n>=1) {\
+        JKMP::vector<double> d; \
+        for (unsigned int i=0; i<n; i++) {\
+            if (params[i].type==jkmpDouble) { \
+                d<<params[i].num;     \
+            } else if (params[i].type==jkmpDoubleVector) {\
+                d<<params[i].numVec;     \
+            } else {\
+                p->jkmpError(JKMP::_("%1(x1, x2, ...) argument %2 has to be a vector of numbers or a number").arg(#NAME_IN_PARSER).arg(i+1));\
+                r.setInvalid();\
+                return; \
+            }\
+        } \
+        r.setDouble(CFUNC(d.data(), d.size()));\
+    } else {\
+        p->jkmpError(JKMP::_("%1(x1, x2, ...) argument 1 has to be a vector of numbers or a number").arg(#NAME_IN_PARSER));\
+        r.setInvalid();\
+    }\
+    return; \
+}
+
+
+
 /*! \brief This macro allows to easily define functions for JKMathParser from a C-function that
            is (numeric_vector, numeric)->number , e.g. qfstatisticsQuantile()
 
@@ -591,6 +701,36 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
     }\
     if(params[0].type==jkmpDoubleVector && params[1].type==jkmpDouble) {\
         r.setDouble(CFUNC(params[0].numVec, params[1].num));\
+    } else {\
+        p->jkmpError(JKMP::_("%1(x, p) argument x has to be a vector of numbers and p a number").arg(#NAME_IN_PARSER));\
+        r.setInvalid();\
+    }\
+    return; \
+}
+
+
+
+/*! \brief This macro allows to easily define functions for JKMathParser from a C-function that
+           is (double*,size_t, numeric)->number , e.g. qfstatisticsQuantile()
+
+    The resulting function will:
+      - check the number of arguments and their type
+      - apply the C-function to the argument
+    .
+
+    \param FName name of the function to declare
+    \param NAME_IN_PARSER name the function should have in the parser (used for error messages only)
+    \param CFUNC name of the C function to call
+*/
+#define JKMATHPARSER_DEFINE_2PARAM1VEC_VECTONUM_CFUNC(FName, NAME_IN_PARSER, CFUNC) \
+static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p){\
+    if (n!=2) {\
+        p->jkmpError(JKMP::_("%1(x, p) needs exacptly 2 argument").arg(#NAME_IN_PARSER));\
+        r.setInvalid();\
+        return; \
+    }\
+    if(params[0].type==jkmpDoubleVector && params[1].type==jkmpDouble) {\
+        r.setDouble(CFUNC(params[0].numVec.data(), params[0].numVec.size(), params[1].num));\
     } else {\
         p->jkmpError(JKMP::_("%1(x, p) argument x has to be a vector of numbers and p a number").arg(#NAME_IN_PARSER));\
         r.setInvalid();\
@@ -622,7 +762,7 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
         r.setDouble(CFUNC(params[0].numVec, params[1].num));\
     } else if(params[0].type==jkmpDoubleVector && params[1].type==jkmpDoubleVector) {\
         JKMP::vector<double> res=params[1].numVec;\
-        for (int i=0; i<params[1].numvec.size(); i++) {\
+        for (size_t i=0; i<params[1].numvec.size(); i++) {\
             res[i]=CFUNC(params[0].numVec, res[i]);\
         }\
         r.setDoubleVec(res);\
@@ -633,10 +773,11 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
     return; \
 }
 
+
 /*! \brief This macro allows to easily define functions for JKMathParser from a C-function that
-           is (numeric_vector, numeric)->number. If the second argument is also a vector, the function
+           is (double*,size_t, numeric)->number. If the second argument is also a vector, the function
            will be applied element-wise to this vector to build an output vector!
-           The C-function expects (double* data, int length) and not a JKMP::vector<double> as parameter!)
+           The C-function expects (double* data, int length) and not a std::vector<double> as parameter!)
 
     The resulting function will:
       - check the number of arguments and their type
@@ -655,10 +796,10 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
         return; \
     }\
     if(params[0].type==jkmpDoubleVector && params[1].type==jkmpDouble) {\
-        r.setDouble(CFUNC(params[0].numVec, params[1].num));\
+        r.setDouble(CFUNC(params[0].numVec.size(), params[0].numVec.size(), params[1].num));\
     } else if(params[0].type==jkmpDoubleVector && params[1].type==jkmpDoubleVector) {\
         JKMP::vector<double> res=params[1].numVec;\
-        for (int i=0; i<params[1].numvec.size(); i++) {\
+        for (size_t i=0; i<params[1].numvec.size(); i++) {\
             res[i]=CFUNC(params[0].numVec.data(), params[0].numVec.size(), res[i]);\
         }\
     r.setDoubleVec(res);\
@@ -694,7 +835,7 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
         r.setDouble(CFUNC(params[0].num, params[1].numVec));\
     } else if(params[0].type==jkmpDoubleVector && params[1].type==jkmpDoubleVector) {\
         JKMP::vector<double> res=params[0].numVec;\
-        for (int i=0; i<res.size(); i++) {\
+        for (size_t i=0; i<res.size(); i++) {\
             res[i]=CFUNC(res[i], params[1].numVec);\
         }\
         r.setDoubleVec(res);\
@@ -705,10 +846,11 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
     return; \
 }
 
+
 /*! \brief This macro allows to easily define functions for JKMathParser from a C-function that
-           is (numeric, numeric_vector)->number. If the second argument is also a vector, the function
+           is (numeric, double*,size_t)->number. If the second argument is also a vector, the function
            will be applied element-wise to this vector to build an output vector!
-           The C-function expects (double, double* data, int length) and not a JKMP::vector<double> as parameter!)
+           The C-function expects (double, double* data, int length) and not a std::vector<double> as parameter!)
 
     The resulting function will:
       - check the number of arguments and their type
@@ -730,7 +872,7 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
         r.setDouble(CFUNC(params[0].num, params[1].numVec.data(), params[1].numVec.size()));\
     } else if(params[0].type==jkmpDoubleVector && params[1].type==jkmpDoubleVector) {\
         JKMP::vector<double> res=params[0].numVec;\
-        for (int i=0; i<res.size(); i++) {\
+        for (size_t i=0; i<res.size(); i++) {\
             res[i]=CFUNC(res[i], params[1].numVec.data(), params[1].numVec.size());\
         }\
         r.setDoubleVec(res);\
@@ -771,6 +913,36 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
     return; \
 }
 
+
+
+/*! \brief This macro allows to easily define functions for JKMathParser from a C-function that
+           is (double*,size_t, numeric, numeric)->number
+
+    The resulting function will:
+      - check the number of arguments and their type
+      - apply the C-function to the argument
+    .
+
+    \param FName name of the function to declare
+    \param NAME_IN_PARSER name the function should have in the parser (used for error messages only)
+    \param CFUNC name of the C function to call
+*/
+#define JKMATHPARSER_DEFINE_3PARAM1VEC_VECTONUM_CFUNC(FName, NAME_IN_PARSER, CFUNC) \
+static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p){\
+    if (n!=3) {\
+        p->jkmpError(JKMP::_("%1(x, p1, p2) needs exacptly 3 argument").arg(#NAME_IN_PARSER));\
+        r.setInvalid();\
+        return; \
+    }\
+    if(params[0].type==jkmpDoubleVector && params[1].type==jkmpDouble && params[2].type==jkmpDouble) {\
+        r.setDouble(CFUNC(params[0].numVec.data(), params[0].numVec.size(), params[1].num, params[2].num));\
+    } else {\
+        p->jkmpError(JKMP::_("%1(x, p) argument x has to be a vector of numbers and p a number").arg(#NAME_IN_PARSER));\
+        r.setInvalid();\
+    }\
+    return; \
+}
+
 /*! \brief This macro allows to easily define functions for JKMathParser from a C-function that
            is (numeric_vector, numeric_vector)->numeric, e.g. qfstatisticsCorrelationCoefficient()
 
@@ -799,6 +971,65 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
     return; \
 }
 
+/*! \brief This macro allows to easily define functions for JKMathParser from a C-function that
+           is (double*,size_t, double*,size_t)->numeric, e.g. qfstatisticsCorrelationCoefficient()
+
+    The resulting function will:
+      - check the number of arguments and their type
+      - apply the C-function to the argument
+    .
+
+    \param FName name of the function to declare
+    \param NAME_IN_PARSER name the function should have in the parser (used for error messages only)
+    \param CFUNC name of the C function to call
+*/
+#define JKMATHPARSER_DEFINE_2PARAM2VEC_VECTONUM_CFUNC(FName, NAME_IN_PARSER, CFUNC) \
+static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p){\
+    if (n!=2) {\
+        p->jkmpError(JKMP::_("%1(x, y) needs exactly 2 argument").arg(#NAME_IN_PARSER));\
+        r.setInvalid();\
+        return; \
+    }\
+    if(params[0].type==jkmpDoubleVector && params[1].type==jkmpDoubleVector) {\
+        JKMP::vector<double> p1=params[0].asVector(); \
+        JKMP::vector<double> p2=params[1].asVector(); \
+        r.setDouble(CFUNC(p1.data(), p1.size(), p2.data(), p2.size()));\
+    } else {\
+        p->jkmpError(JKMP::_("%1(x, y) arguments x and y have to be a vector of numbers").arg(#NAME_IN_PARSER));\
+        r.setInvalid();\
+    }\
+    return; \
+}
+
+/*! \brief This macro allows to easily define functions for JKMathParser from a C-function that
+           is (double*, double*,size_t)->numeric, e.g. qfstatisticsCorrelationCoefficient()
+
+    The resulting function will:
+      - check the number of arguments and their type
+      - apply the C-function to the argument
+    .
+
+    \param FName name of the function to declare
+    \param NAME_IN_PARSER name the function should have in the parser (used for error messages only)
+    \param CFUNC name of the C function to call
+*/
+#define JKMATHPARSER_DEFINE_2PARAM2VEC_VECTONUM_CFUNC_1N(FName, NAME_IN_PARSER, CFUNC) \
+static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p){\
+    if (n!=2) {\
+        p->jkmpError(JKMP::_("%1(x, y) needs exactly 2 argument").arg(#NAME_IN_PARSER));\
+        r.setInvalid();\
+        return; \
+    }\
+    if(params[0].type==jkmpDoubleVector && params[1].type==jkmpDoubleVector) {\
+        JKMP::vector<double> p1=params[0].asVector(); \
+        JKMP::vector<double> p2=params[1].asVector(); \
+        r.setDouble(CFUNC(p1.data(), p2.data(), std::min(p1.size(),p2.size())));\
+    } else {\
+        p->jkmpError(JKMP::_("%1(x, y) arguments x and y have to be a vector of numbers").arg(#NAME_IN_PARSER));\
+        r.setInvalid();\
+    }\
+    return; \
+}
 
 /*! \brief This macro allows to easily define functions for JKMathParser from a C-function that
            is string->string.  The result is string->string or str_vector->str_vector.
@@ -827,7 +1058,7 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
         r.str=CFUNC(params[0].str);\
     } else if (params[0].type==jkmpStringVector) {\
         r.setStringVec(params[0].strVec.size());\
-        for (int i=0; i<params[0].strVec.size(); i++) {\
+        for (size_t i=0; i<params[0].strVec.size(); i++) {\
             r.strVec[i]=CFUNC(params[0].strVec[i]);\
         }\
     } else {\
@@ -903,7 +1134,7 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
         r.setBoolean(CFUNC(params[0].num));\
     } else if (params[0].type==jkmpDoubleVector) {\
         r.setBoolVec(params[0].numVec.size());\
-        for (int i=0; i<params[0].numVec.size(); i++) {\
+        for (size_t i=0; i<params[0].numVec.size(); i++) {\
             r.boolVec[i]=CFUNC(params[0].numVec[i]);\
         }\
     } else {\
@@ -945,7 +1176,7 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
         r.str=CFUNC(params[0].num);\
     } else if (params[0].type==jkmpDoubleVector) {\
         r.setStringVec(params[0].numVec.size());\
-        for (int i=0; i<params[0].numVec.size(); i++) {\
+        for (size_t i=0; i<params[0].numVec.size(); i++) {\
             r.strVec[i]=CFUNC(params[0].numVec[i]);\
         }\
     } else {\
@@ -984,7 +1215,7 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
         r.setDouble(CFUNC(params[0].str));\
     } else if (params[0].type==jkmpStringVector) {\
         r.setDoubleVec(params[0].strVec.size());\
-        for (int i=0; i<params[0].strVec.size(); i++) {\
+        for (size_t i=0; i<params[0].strVec.size(); i++) {\
             r.numVec[i]=CFUNC(params[0].strVec[i]);\
         }\
     } else {\
@@ -1023,7 +1254,7 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
         r.boolean=CFUNC(params[0].str);\
     } else if (params[0].type==jkmpStringVector) {\
         r.setBoolVec(params[0].strVec.size());\
-        for (int i=0; i<params[0].strVec.size(); i++) {\
+        for (size_t i=0; i<params[0].strVec.size(); i++) {\
             r.boolVec[i]=CFUNC(params[0].strVec[i]);\
         }\
     } else {\
@@ -1064,7 +1295,7 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
         r.str=CFUNC(params[0].boolean);\
     } else if (params[0].type==jkmpBoolVector) {\
         r.setStringVec(params[0].boolVec.size());\
-        for (int i=0; i<params[0].boolVec.size(); i++) {\
+        for (size_t i=0; i<params[0].boolVec.size(); i++) {\
             r.strVec[i]=CFUNC(params[0].boolVec[i]);\
         }\
     } else {\
@@ -1114,7 +1345,7 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
     } else if(params[1].type==jkmpDoubleVector) {\
         r.type=jkmpDoubleVector;\
         r.numVec.resize(params[1].numVec.size());\
-        for (int i=0; i<params[1].numVec.size(); i++) {\
+        for (size_t i=0; i<params[1].numVec.size(); i++) {\
             r.numVec[i]=CFUNC(pa, params[1].numVec[i]);\
         }\
     } else {\
@@ -1160,7 +1391,7 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
     } else if(params[0].type==jkmpDoubleVector) {\
         r.type=jkmpDoubleVector;\
         r.numVec.resize(params[0].numVec.size());\
-        for (int i=0; i<params[0].numVec.size(); i++) {\
+        for (size_t i=0; i<params[0].numVec.size(); i++) {\
             r.numVec[i]=CFUNC(params[0].numVec[i], pa);\
         }\
     } else {\
@@ -1221,7 +1452,7 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
     } else if(params[0].type==jkmpDoubleVector) {\
         r.type=jkmpDoubleVector;\
         r.numVec.resize(params[0].numVec.size());\
-        for (int i=0; i<params[0].numVec.size(); i++) {\
+        for (size_t i=0; i<params[0].numVec.size(); i++) {\
             r.numVec[i]=CFUNC(params[0].numVec[i], pa, pb);\
         }\
     } else {\
@@ -1286,7 +1517,7 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
     } else if(params[0].type==jkmpDoubleVector) {\
         r.type=jkmpDoubleVector;\
         r.numVec.resize(params[0].numVec.size());\
-        for (int i=0; i<params[0].numVec.size(); i++) {\
+        for (size_t i=0; i<params[0].numVec.size(); i++) {\
             r.numVec[i]=CFUNC(params[0].numVec[i], pa, pb, pc);\
         }\
     } else {\
@@ -1333,7 +1564,7 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
     } else if(params[0].type==jkmpDoubleVector) {\
         r.type=jkmpDoubleVector;\
         r.numVec.resize(params[0].numVec.size());\
-        for (int i=0; i<params[0].numVec.size(); i++) {\
+        for (size_t i=0; i<params[0].numVec.size(); i++) {\
             r.numVec[i]=CFUNC(params[0].numVec[i], pa);\
         }\
     } else {\
@@ -1388,7 +1619,7 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
     } else if(params[0].type==jkmpDoubleVector) {\
         r.type=jkmpDoubleVector;\
         r.numVec.resize(params[0].numVec.size());\
-        for (int i=0; i<params[0].numVec.size(); i++) {\
+        for (size_t i=0; i<params[0].numVec.size(); i++) {\
             r.numVec[i]=CFUNC(params[0].numVec[i], pa, pb);\
         }\
     } else {\
@@ -1454,7 +1685,7 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
     } else if(params[0].type==jkmpDoubleVector) {\
         r.type=jkmpDoubleVector;\
         r.numVec.resize(params[0].numVec.size());\
-        for (int i=0; i<params[0].numVec.size(); i++) {\
+        for (size_t i=0; i<params[0].numVec.size(); i++) {\
             r.numVec[i]=CFUNC(params[0].numVec[i], pa, pb, pc);\
         }\
     } else {\
@@ -1498,7 +1729,7 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
         }\
         r.type=jkmpDoubleVector;\
         r.numVec.resize(params[0].numVec.size());\
-        for (int i=0; i<params[0].numVec.size(); i++) {\
+        for (size_t i=0; i<params[0].numVec.size(); i++) {\
             r.numVec[i]=CFUNC(params[0].numVec[i], params[1].numVec[i]);\
         }\
     } else {\

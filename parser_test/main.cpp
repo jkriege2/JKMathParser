@@ -1,5 +1,5 @@
 #include "../jkmathparser.h"
-#include "../jkmathparsertools.h"
+#include "../jkmptools.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>

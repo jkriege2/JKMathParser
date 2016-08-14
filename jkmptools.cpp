@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "jkmathparsertools.h"
+#include "jkmptools.h"
 #include "jkmathparser.h"
 #include <typeinfo>
 
@@ -57,12 +57,12 @@ jkmpResult::jkmpResult(bool value)
     setBoolean(value);
 }
 
-jkmpResult::jkmpResult(const JKMP::vector<double>& value)
+jkmpResult::jkmpResult(const std::vector<double>& value)
 {
     setDoubleVec(value);
 }
 
-jkmpResult::jkmpResult(const JKMP::vector<bool> &value)
+jkmpResult::jkmpResult(const std::vector<bool> &value)
 {
     setBoolVec(value);
 }
@@ -127,14 +127,14 @@ void jkmpResult::setVoid()
 JKMP::string jkmpResult::toString(int precision) const
 {
     switch(type) {
-        case jkmpDouble: return doubleToJKMP::string(num, precision);
+        case jkmpDouble: return JKMP::floattostr(num, precision);
         case jkmpDoubleVector: return JKMP::string("[ ")+doubleVecToJKMP::string(numVec, precision, 'g', '.', ", ")+JKMP::string(" ]");
         case jkmpDoubleMatrix: return JKMP::string("[ ")+doubleMatrixToJKMP::string(numVec, matrix_columns, precision,'g', '.', ", ", ";\n")+JKMP::string(" ]");
         case jkmpStringVector: return JKMP::string("[ ")+strVec.join(", ")+JKMP::string(" ]");
         case jkmpBoolVector: return JKMP::string("[ ")+boolvectorToJKMP::string(boolVec, ", ", " true", "false")+JKMP::string(" ]");
         case jkmpBoolMatrix: return JKMP::string("[ ")+boolMatrixToJKMP::string(boolVec, matrix_columns, ", ", ";\n", " true", "false")+JKMP::string(" ]");
         case jkmpString: return str;
-        case jkmpBool: return boolToJKMP::string(boolean);
+        case jkmpBool: return JKMP::booltostr(boolean);
         case jkmpStruct: {
                 JKMP::stringVector sl;
                 JKMP::mapIterator<JKMP::string,jkmpResult> it(structData);
@@ -162,14 +162,14 @@ JKMP::string jkmpResult::toTypeString(int precision) const
 {
     if (!isValid) return JKMP::_("[INVALID]");
     switch(type) {
-        case jkmpDouble: return doubleToJKMP::string(num, precision)+JKMP::_(" [number]");
+        case jkmpDouble: return JKMP::floattostr(num, precision)+JKMP::_(" [number]");
         case jkmpDoubleVector: return JKMP::string("[ ")+doubleVecToJKMP::string(numVec, precision, 'g', '.', ", ")+JKMP::string(" ] [number vector]");
         case jkmpDoubleMatrix: return JKMP::string("[ ")+doubleMatrixToJKMP::string(numVec, matrix_columns, precision,'g', '.', ", ", ";\n")+JKMP::string(" ] [number matrix]");
         case jkmpStringVector: return JKMP::string("[ ")+strVec.join(", ")+JKMP::string(" ] [string vector]");
         case jkmpBoolVector: return JKMP::string("[ ")+boolvectorToJKMP::string(boolVec, ", ", "true", "false")+JKMP::string(" ] [boolean vector]");
         case jkmpBoolMatrix: return JKMP::string("[ ")+boolMatrixToJKMP::string(boolVec, matrix_columns, ", ", ";\n", "true", "false")+JKMP::string(" ] [boolean matrix]");
         case jkmpString: return str+JKMP::_(" [string]");
-        case jkmpBool: return boolToJKMP::string(boolean)+JKMP::_(" [bool]");
+        case jkmpBool: return JKMP::booltostr(boolean)+JKMP::_(" [bool]");
         case jkmpVoid: return JKMP::_(" [void]");
         case jkmpStruct: {
                 JKMP::stringVector sl;
@@ -208,23 +208,23 @@ uint32_t jkmpResult::toUInt() const
     return 0;
 }
 
-JKMP::vector<uint32_t> jkmpResult::toUIntVector() const
+std::vector<uint32_t> jkmpResult::toUIntVector() const
 {
-    JKMP::vector<uint32_t> l;
+    std::vector<uint32_t> l;
     if (type==jkmpDoubleVector) {
-        for (int i=0; i<numVec.size(); i++) {
-            l<<uint32_t(numVec[i]);
+        for (size_t i=0; i<numVec.size(); i++) {
+            l.push_back(uint32_t(numVec[i]));
         }
     }
     return l;
 }
 
-JKMP::vector<int32_t> jkmpResult::toIntVector() const
+std::vector<int32_t> jkmpResult::toIntVector() const
 {
-    JKMP::vector<int32_t> l;
+    std::vector<int32_t> l;
     if (type==jkmpDoubleVector) {
-        for (int i=0; i<numVec.size(); i++) {
-            l<<int32_t(numVec[i]);
+        for (size_t i=0; i<numVec.size(); i++) {
+            l.push_back(int32_t(numVec[i]));
         }
     }
     return l;
@@ -232,7 +232,7 @@ JKMP::vector<int32_t> jkmpResult::toIntVector() const
 
 
 
-int jkmpResult::length() const
+size_t jkmpResult::length() const
 {
     if (!isValid) return 0;
     switch(type) {
@@ -251,8 +251,13 @@ int jkmpResult::length() const
     return 0;
 }
 
+size_t jkmpResult::size() const
+{
+    return length();
+}
 
-int jkmpResult::sizeX() const
+
+size_t jkmpResult::sizeX() const
 {
     //if (type==jkmp) return ;
     if (isMatrix()) return matrix_columns;
@@ -260,7 +265,7 @@ int jkmpResult::sizeX() const
 }
 
 
-int jkmpResult::sizeY() const
+size_t jkmpResult::sizeY() const
 {
     //if (type==jkmp) return ;
     if (isMatrix()) return length()/matrix_columns;
@@ -301,7 +306,7 @@ bool jkmpResult::isMatrix() const
 bool jkmpResult::isUIntVector() const
 {
     if (type==jkmpDoubleVector) {
-        for (int i=0; i<numVec.size(); i++) {
+        for (size_t i=0; i<numVec.size(); i++) {
             double num=numVec[i];
             if (!(fabs(num)<2147483648.0)&&(num>=0)&&(num==round(num))) {
                 return false;
@@ -315,7 +320,7 @@ bool jkmpResult::isUIntVector() const
 bool jkmpResult::isIntVector() const
 {
     if (type==jkmpDoubleVector) {
-        for (int i=0; i<numVec.size(); i++) {
+        for (size_t i=0; i<numVec.size(); i++) {
             double num=numVec[i];
             if (!(fabs(num)<2147483648.0)&&(num==round(num))) {
                 return false;
@@ -342,7 +347,7 @@ void jkmpResult::setBoolean(bool val)
     isValid=true;
 }
 
-void jkmpResult::setString(const JKMP::string &val)
+void jkmpResult::setString(const std::string &val)
 {
     setInvalid();
     type=jkmpString;
@@ -358,13 +363,14 @@ void jkmpResult::setString(int size, char defaultChar)
     isValid=true;
 }
 
-void jkmpResult::setDoubleVec(const JKMP::vector<double> &val)
+void jkmpResult::setDoubleVec(const std::vector<double> &val)
 {
     setInvalid();
     isValid=true;
     type=jkmpDoubleVector;
     numVec=val;
 }
+
 
 void jkmpResult::setDoubleVec(int size, double defaultVal)
 {
@@ -395,7 +401,7 @@ void jkmpResult::setStruct(const JKMP::stringVector &items)
     setInvalid();
     isValid=true;
     type=jkmpStruct;
-    for (int i=0; i<items.size(); i++) {
+    for (size_t i=0; i<items.size(); i++) {
         structData.insert(std::make_pair(items[i], jkmpResult::invalidResult()));
     }
 }
@@ -410,7 +416,7 @@ void jkmpResult::setList(int items)
     }
 }
 
-void jkmpResult::setList(const JKMP::vector<jkmpResult> &dat)
+void jkmpResult::setList(const std::vector<jkmpResult> &dat)
 {
     setInvalid();
     isValid=true;
@@ -418,7 +424,7 @@ void jkmpResult::setList(const JKMP::vector<jkmpResult> &dat)
     listData=dat;
 }
 
-void jkmpResult::setBoolVec(const JKMP::vector<bool> &val)
+void jkmpResult::setBoolVec(const std::vector<bool> &val)
 {
     setInvalid();
     isValid=true;
@@ -468,17 +474,17 @@ void jkmpResult::setStringVec(int size, const JKMP::string &defaultVal)
     }
 }
 
-JKMP::vector<double> jkmpResult::asVector() const
+std::vector<double> jkmpResult::asVector() const
 {
     if (type==jkmpDoubleVector) return numVec;
     else if (type==jkmpBoolVector) return boolvectorToNumVec(boolVec, 1.0, 0.0);
-    else if (type==jkmpDouble) return JKMP::vector<double>(1, num);
+    else if (type==jkmpDouble) return std::vector<double>(1, num);
     else if (type==jkmpList) {
         bool ok=true;
-        JKMP::vector<double> v;
-        for (JKMP::vector<jkmpResult>::const_iterator it=listData.begin(); it!=listData.end(); it++) {
+        std::vector<double> v;
+        for (std::vector<jkmpResult>::const_iterator it=listData.begin(); it!=listData.end(); it++) {
             if (it->convertsToDouble()) {
-                v<<it->asNumber();
+                v.push_back(it->asNumber());
             } else {
                 ok=false;
                 break;
@@ -486,7 +492,7 @@ JKMP::vector<double> jkmpResult::asVector() const
         }
         if (ok) return v;
     }
-    return JKMP::vector<double>();
+    return std::vector<double>();
 }
 
 
@@ -497,12 +503,12 @@ JKMP::stringVector jkmpResult::asStrVector() const
     return JKMP::stringVector();
 }
 
-JKMP::vector<bool> jkmpResult::asBoolVector() const
+std::vector<bool> jkmpResult::asBoolVector() const
 {
     if (type==jkmpBoolVector) return boolVec;
-    else if (type==jkmpBool) return JKMP::vector<bool>(1, boolean);
+    else if (type==jkmpBool) return std::vector<bool>(1, boolean);
 
-    return JKMP::vector<bool>();
+    return std::vector<bool>();
 }
 
 bool jkmpResult::convertsToVector() const
@@ -587,7 +593,7 @@ jkmpResult jkmpResult::getListItem(int item, const jkmpResult &defaultResult) co
 
 void jkmpResult::removeListItem(int item) {
     if (type==jkmpList) {
-        if (item>=0 && item<listData.size() ) listData.removeAt(item);
+        if (item>=0 && item<listData.size() ) listData.erase(listData.begin()+item);
     }
 }
 
@@ -599,8 +605,8 @@ void jkmpResult::appendListItem(const jkmpResult& item) {
 
 void jkmpResult::insertListItem(int i, const jkmpResult& item) {
     if (type==jkmpList) {
-        if (i>=0 && i<listData.size() ) listData.insert(i, item);
-        else if (i<0) listData.prepend(item);
+        if (i>=0 && i<listData.size() ) listData.insert(listData.begin()+i, item);
+        else if (i<0) listData.push_front(item);
         else if (i>=listData.size()) listData.push_back(item);
     }
 }
@@ -678,7 +684,7 @@ void jkmpResult::add(jkmpResult& re, const jkmpResult &l, const jkmpResult &r, J
         case (jkmpDoubleMatrix<<16)+jkmpDouble:
             {
             re=l;
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 re.numVec[i]=l.numVec[i]+r.num;
             }
             break;
@@ -687,7 +693,7 @@ void jkmpResult::add(jkmpResult& re, const jkmpResult &l, const jkmpResult &r, J
         case (uint32_t(jkmpDouble)<<16)+jkmpDoubleMatrix:
             {
             re=r;
-            for (int i=0; i<r.numVec.size(); i++) {
+            for (size_t i=0; i<r.numVec.size(); i++) {
                 re.numVec[i]=l.num+r.numVec[i];
             }
             break;
@@ -709,7 +715,7 @@ void jkmpResult::add(jkmpResult& re, const jkmpResult &l, const jkmpResult &r, J
                     }
                 }
                 re=r;
-                for (int i=0; i<r.numVec.size(); i++) {
+                for (size_t i=0; i<r.numVec.size(); i++) {
                     re.numVec[i]=l.numVec[i]+r.numVec[i];
                 }
                 break;
@@ -743,7 +749,7 @@ void jkmpResult::sub(jkmpResult& re, const jkmpResult &l, const jkmpResult &r, J
         case (jkmpDoubleMatrix<<16)+jkmpDouble:
             {
             re=l;
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 re.numVec[i]=l.numVec[i]-r.num;
             }
             break;
@@ -752,7 +758,7 @@ void jkmpResult::sub(jkmpResult& re, const jkmpResult &l, const jkmpResult &r, J
         case (uint32_t(jkmpDouble)<<16)+jkmpDoubleMatrix:
             {
             re=r;
-            for (int i=0; i<r.numVec.size(); i++) {
+            for (size_t i=0; i<r.numVec.size(); i++) {
                 re.numVec[i]=l.num-r.numVec[i];
             }
             break;
@@ -774,7 +780,7 @@ void jkmpResult::sub(jkmpResult& re, const jkmpResult &l, const jkmpResult &r, J
                     }
                 }
                 re=r;
-                for (int i=0; i<r.numVec.size(); i++) {
+                for (size_t i=0; i<r.numVec.size(); i++) {
                     re.numVec[i]=l.numVec[i]-r.numVec[i];
                 }
                 break;
@@ -802,7 +808,7 @@ void jkmpResult::mul(jkmpResult& re, const jkmpResult &l, const jkmpResult &r, J
         case (jkmpDoubleMatrix<<16)+jkmpDouble:
             {
             re=l;
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 re.numVec[i]=l.numVec[i]*r.num;
             }
             break;
@@ -811,7 +817,7 @@ void jkmpResult::mul(jkmpResult& re, const jkmpResult &l, const jkmpResult &r, J
         case (uint32_t(jkmpDouble)<<16)+jkmpDoubleMatrix:
             {
             re=r;
-            for (int i=0; i<r.numVec.size(); i++) {
+            for (size_t i=0; i<r.numVec.size(); i++) {
                 re.numVec[i]=l.num*r.numVec[i];
             }
             break;
@@ -833,7 +839,7 @@ void jkmpResult::mul(jkmpResult& re, const jkmpResult &l, const jkmpResult &r, J
                     }
                 }
                 re=r;
-                for (int i=0; i<r.numVec.size(); i++) {
+                for (size_t i=0; i<r.numVec.size(); i++) {
                     re.numVec[i]=l.numVec[i]*r.numVec[i];
                 }
                 break;
@@ -861,7 +867,7 @@ void jkmpResult::div(jkmpResult& re, const jkmpResult &l, const jkmpResult &r, J
         case (jkmpDoubleMatrix<<16)+jkmpDouble:
             {
             re=l;
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 re.numVec[i]=l.numVec[i]/r.num;
             }
             break;
@@ -870,7 +876,7 @@ void jkmpResult::div(jkmpResult& re, const jkmpResult &l, const jkmpResult &r, J
         case (uint32_t(jkmpDouble)<<16)+jkmpDoubleMatrix:
             {
             re=r;
-            for (int i=0; i<r.numVec.size(); i++) {
+            for (size_t i=0; i<r.numVec.size(); i++) {
                 re.numVec[i]=l.num/r.numVec[i];
             }
             break;
@@ -892,7 +898,7 @@ void jkmpResult::div(jkmpResult& re, const jkmpResult &l, const jkmpResult &r, J
                     }
                 }
                 re=r;
-                for (int i=0; i<r.numVec.size(); i++) {
+                for (size_t i=0; i<r.numVec.size(); i++) {
                     re.numVec[i]=l.numVec[i]/r.numVec[i];
                 }
                 break;
@@ -920,7 +926,7 @@ void jkmpResult::mod(jkmpResult& re, const jkmpResult &l, const jkmpResult &r, J
         case (jkmpDoubleMatrix<<16)+jkmpDouble:
             {
             re=l;
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 re.numVec[i]=int32_t(l.numVec[i])%r.toInteger();
             }
             break;
@@ -929,7 +935,7 @@ void jkmpResult::mod(jkmpResult& re, const jkmpResult &l, const jkmpResult &r, J
         case (jkmpDouble<<16)+jkmpDoubleMatrix:
             {
             re=r;
-            for (int i=0; i<r.numVec.size(); i++) {
+            for (size_t i=0; i<r.numVec.size(); i++) {
                 re.numVec[i]=l.toInteger()%int32_t(r.numVec[i]);
             }
             break;
@@ -951,7 +957,7 @@ void jkmpResult::mod(jkmpResult& re, const jkmpResult &l, const jkmpResult &r, J
                 }
             }
             re=l;
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 re.numVec[i]=int32_t(l.numVec[i])%int32_t(r.numVec[i]);
             }
             break;
@@ -979,7 +985,7 @@ void jkmpResult::power(jkmpResult& re, const jkmpResult &l, const jkmpResult &r,
         case (jkmpDoubleMatrix<<16)+jkmpDouble:
             {
             re=l;
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 re.numVec[i]=pow(l.numVec[i],r.num);
             }
             break;
@@ -988,7 +994,7 @@ void jkmpResult::power(jkmpResult& re, const jkmpResult &l, const jkmpResult &r,
         case (jkmpDouble<<16)+jkmpDoubleMatrix:
             {
             re=r;
-            for (int i=0; i<r.numVec.size(); i++) {
+            for (size_t i=0; i<r.numVec.size(); i++) {
                 re.numVec[i]=pow(l.num,r.numVec[i]);
             }
             break;
@@ -1011,7 +1017,7 @@ void jkmpResult::power(jkmpResult& re, const jkmpResult &l, const jkmpResult &r,
                 }
 
             re=r;
-            for (int i=0; i<r.numVec.size(); i++) {
+            for (size_t i=0; i<r.numVec.size(); i++) {
                 re.numVec[i]=pow(l.numVec[i],r.numVec[i]);
             }
             break;
@@ -1039,7 +1045,7 @@ void jkmpResult::bitwiseand(jkmpResult& re, const jkmpResult &l, const jkmpResul
         case (jkmpDoubleMatrix<<16)+jkmpDouble:
             {
             re=l;
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 re.numVec[i]=int32_t(l.numVec[i])&r.toInteger();
             }
             break;
@@ -1048,7 +1054,7 @@ void jkmpResult::bitwiseand(jkmpResult& re, const jkmpResult &l, const jkmpResul
         case (jkmpDouble<<16)+jkmpDoubleMatrix:
             {
             re=r;
-            for (int i=0; i<r.numVec.size(); i++) {
+            for (size_t i=0; i<r.numVec.size(); i++) {
                 re.numVec[i]=l.toInteger()&int32_t(r.numVec[i]);
             }
             break;
@@ -1070,7 +1076,7 @@ void jkmpResult::bitwiseand(jkmpResult& re, const jkmpResult &l, const jkmpResul
                     }
                 }
             re=r;
-            for (int i=0; i<r.numVec.size(); i++) {
+            for (size_t i=0; i<r.numVec.size(); i++) {
                 re.numVec[i]=int32_t(l.numVec[i])&int32_t(r.numVec[i]);
             }
             break;
@@ -1098,7 +1104,7 @@ void jkmpResult::bitwiseor(jkmpResult& re, const jkmpResult &l, const jkmpResult
         case (jkmpDoubleMatrix<<16)+jkmpDouble:
             {
             re=r;
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 re.numVec[i]=int32_t(l.numVec[i])|r.toInteger();
             }
             break;
@@ -1107,7 +1113,7 @@ void jkmpResult::bitwiseor(jkmpResult& re, const jkmpResult &l, const jkmpResult
         case (jkmpDouble<<16)+jkmpDoubleMatrix:
             {
             re=l;
-            for (int i=0; i<r.numVec.size(); i++) {
+            for (size_t i=0; i<r.numVec.size(); i++) {
                 re.numVec[i]=l.toInteger()|int32_t(r.numVec[i]);
             }
             break;
@@ -1130,7 +1136,7 @@ void jkmpResult::bitwiseor(jkmpResult& re, const jkmpResult &l, const jkmpResult
             }
 
             re=r;
-            for (int i=0; i<r.numVec.size(); i++) {
+            for (size_t i=0; i<r.numVec.size(); i++) {
                 re.numVec[i]=int32_t(l.numVec[i])|int32_t(r.numVec[i]);
             }
             break;
@@ -1171,7 +1177,7 @@ void jkmpResult::logicand(jkmpResult& re, const jkmpResult &l, const jkmpResult 
                     }
                 }
             re=r;
-            for (int i=0; i<r.boolVec.size(); i++) {
+            for (size_t i=0; i<r.boolVec.size(); i++) {
                 re.boolVec[i]=l.boolVec[i]&&r.boolVec[i];
             }
             break;
@@ -1180,7 +1186,7 @@ void jkmpResult::logicand(jkmpResult& re, const jkmpResult &l, const jkmpResult 
         case (jkmpBoolMatrix<<16)+jkmpBool:
             {
             re=l;
-            for (int i=0; i<l.boolVec.size(); i++) {
+            for (size_t i=0; i<l.boolVec.size(); i++) {
                 re.boolVec[i]=l.boolVec[i]&&r.boolean;
             }
             break;
@@ -1222,7 +1228,7 @@ void jkmpResult::logicor(jkmpResult& re, const jkmpResult &l, const jkmpResult &
                     }
                 }
             re=r;
-            for (int i=0; i<r.boolVec.size(); i++) {
+            for (size_t i=0; i<r.boolVec.size(); i++) {
                 re.boolVec[i]=l.boolVec[i]||r.boolVec[i];
             }
             break;
@@ -1231,7 +1237,7 @@ void jkmpResult::logicor(jkmpResult& re, const jkmpResult &l, const jkmpResult &
         case (jkmpBoolMatrix<<16)+jkmpBool:
             {
             re=l;
-            for (int i=0; i<l.boolVec.size(); i++) {
+            for (size_t i=0; i<l.boolVec.size(); i++) {
                 re.boolVec[i]=l.boolVec[i]||r.boolean;
             }
             break;
@@ -1253,7 +1259,7 @@ void jkmpResult::logicnot(jkmpResult& re, const jkmpResult &l, JKMathParser *p)
         case jkmpBoolMatrix:
             {
             re=l;
-            for (int i=0; i<l.boolVec.size(); i++) {
+            for (size_t i=0; i<l.boolVec.size(); i++) {
                 re.boolVec[i]=!l.boolVec[i];
             }
             break;
@@ -1296,7 +1302,7 @@ void jkmpResult::logicnand(jkmpResult &re, const jkmpResult &l, const jkmpResult
                     }
                 }
             re=r;
-            for (int i=0; i<r.boolVec.size(); i++) {
+            for (size_t i=0; i<r.boolVec.size(); i++) {
                 re.boolVec[i]=!(l.boolVec[i]&&r.boolVec[i]);
             }
             break;
@@ -1305,7 +1311,7 @@ void jkmpResult::logicnand(jkmpResult &re, const jkmpResult &l, const jkmpResult
         case (jkmpBoolMatrix<<16)+jkmpBool:
             {
             re=l;
-            for (int i=0; i<l.boolVec.size(); i++) {
+            for (size_t i=0; i<l.boolVec.size(); i++) {
                 re.boolVec[i]=!(l.boolVec[i]&&r.boolean);
             }
             break;
@@ -1346,7 +1352,7 @@ void jkmpResult::logicnor(jkmpResult &re, const jkmpResult &l, const jkmpResult 
                     }
                 }
             re=r;
-            for (int i=0; i<r.boolVec.size(); i++) {
+            for (size_t i=0; i<r.boolVec.size(); i++) {
                 re.boolVec[i]=!(l.boolVec[i]||r.boolVec[i]);
             }
             break;
@@ -1354,7 +1360,7 @@ void jkmpResult::logicnor(jkmpResult &re, const jkmpResult &l, const jkmpResult 
         case (jkmpBoolVector<<16)+jkmpBool:
         case (jkmpBoolMatrix<<16)+jkmpBool: {
             re=l;
-            for (int i=0; i<l.boolVec.size(); i++) {
+            for (size_t i=0; i<l.boolVec.size(); i++) {
                 re.boolVec[i]=!(l.boolVec[i]||r.boolean);
             }
             break;
@@ -1395,7 +1401,7 @@ void jkmpResult::logicxor(jkmpResult &re, const jkmpResult &l, const jkmpResult 
                     }
                 }
             re=r;
-            for (int i=0; i<r.boolVec.size(); i++) {
+            for (size_t i=0; i<r.boolVec.size(); i++) {
                 re.boolVec[i]=(!l.boolVec[i]&&r.boolVec[i])||(l.boolVec[i]&&!r.boolVec[i]);
             }
             break;
@@ -1404,7 +1410,7 @@ void jkmpResult::logicxor(jkmpResult &re, const jkmpResult &l, const jkmpResult 
         case (jkmpBoolMatrix<<16)+jkmpBool:
             {
             re=l;
-            for (int i=0; i<l.boolVec.size(); i++) {
+            for (size_t i=0; i<l.boolVec.size(); i++) {
                 re.boolVec[i]=(!l.boolVec[i]&&r.boolean)||(l.boolVec[i]&&!r.boolean);
             }
             break;
@@ -1426,7 +1432,7 @@ void jkmpResult::neg(jkmpResult& re, const jkmpResult &l, JKMathParser *p)
         case jkmpDoubleMatrix:
             {
             re=l;
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 re.numVec[i]=l.numVec[i];
             }
             break;
@@ -1449,7 +1455,7 @@ void jkmpResult::bitwisenot(jkmpResult& re, const jkmpResult &l, JKMathParser *p
         case jkmpDoubleMatrix:
             {
             re=l;
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 re.numVec[i]=~int32_t(l.numVec[i]);
             }
             break;
@@ -1490,31 +1496,31 @@ void jkmpResult::compareequal(jkmpResult& res, const jkmpResult &l, const jkmpRe
                     res.setBoolVec(l.numVec.size());
                 }
 
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 res.boolVec[i]=(l.numVec[i]==r.numVec[i]);
             }
             } break;
         case (jkmpDoubleVector<<16)+jkmpDouble: {
             res.setBoolVec(l.numVec.size());
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 res.boolVec[i]=(l.numVec[i]==r.num);
             }
             } break;
         case (jkmpDouble<<16)+jkmpDoubleVector: {
             res.setBoolVec(r.numVec.size());
-            for (int i=0; i<r.numVec.size(); i++) {
+            for (size_t i=0; i<r.numVec.size(); i++) {
                 res.boolVec[i]=(r.numVec[i]==l.num);
             }
             } break;
         case (jkmpDoubleMatrix<<16)+jkmpDouble: {
             res.setBoolMatrix(l.numVec.size(), l.matrix_columns);
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 res.boolVec[i]=(l.numVec[i]==r.num);
             }
             } break;
         case (jkmpDouble<<16)+jkmpDoubleMatrix: {
             res.setBoolMatrix(r.numVec.size(), r.matrix_columns);
-            for (int i=0; i<r.numVec.size(); i++) {
+            for (size_t i=0; i<r.numVec.size(); i++) {
                 res.boolVec[i]=(r.numVec[i]==l.num);
             }
             } break;
@@ -1535,19 +1541,19 @@ void jkmpResult::compareequal(jkmpResult& res, const jkmpResult &l, const jkmpRe
                 return;
             }
             res.setBoolVec(l.strVec.size());
-            for (int i=0; i<l.strVec.size(); i++) {
+            for (size_t i=0; i<l.strVec.size(); i++) {
                 res.boolVec[i]=(l.strVec[i]==r.strVec[i]);
             }
             } break;
         case (jkmpStringVector<<16)+jkmpString: {
             res.setBoolVec(l.strVec.size());
-            for (int i=0; i<l.strVec.size(); i++) {
+            for (size_t i=0; i<l.strVec.size(); i++) {
                 res.boolVec[i]=(l.strVec[i]==r.str);
             }
             } break;
         case (jkmpString<<16)+jkmpStringVector: {
             res.setBoolVec(r.strVec.size());
-            for (int i=0; i<r.strVec.size(); i++) {
+            for (size_t i=0; i<r.strVec.size(); i++) {
                 res.boolVec[i]=(r.strVec[i]==l.str);
             }
             } break;
@@ -1574,31 +1580,31 @@ void jkmpResult::compareequal(jkmpResult& res, const jkmpResult &l, const jkmpRe
                     }
                     res.setBoolVec(l.boolVec.size());
                 }
-            for (int i=0; i<l.boolVec.size(); i++) {
+            for (size_t i=0; i<l.boolVec.size(); i++) {
                 res.boolVec[i]=(l.boolVec[i]==r.boolVec[i]);
             }
             } break;
         case (jkmpBoolVector<<16)+jkmpBool: {
             res.setBoolVec(l.boolVec.size());
-            for (int i=0; i<l.boolVec.size(); i++) {
+            for (size_t i=0; i<l.boolVec.size(); i++) {
                 res.boolVec[i]=(l.boolVec[i]==r.boolean);
             }
             } break;
         case (jkmpBool<<16)+jkmpBoolVector: {
             res.setBoolVec(r.boolVec.size());
-            for (int i=0; i<r.boolVec.size(); i++) {
+            for (size_t i=0; i<r.boolVec.size(); i++) {
                 res.boolVec[i]=(r.boolVec[i]==l.boolean);
             }
             } break;
         case (jkmpBoolMatrix<<16)+jkmpBool: {
             res.setBoolMatrix(l.boolVec.size(), l.matrix_columns);
-            for (int i=0; i<l.boolVec.size(); i++) {
+            for (size_t i=0; i<l.boolVec.size(); i++) {
                 res.boolVec[i]=(l.boolVec[i]==r.boolean);
             }
             } break;
         case (jkmpBool<<16)+jkmpBoolMatrix: {
             res.setBoolMatrix(r.boolVec.size(), r.matrix_columns);
-            for (int i=0; i<r.boolVec.size(); i++) {
+            for (size_t i=0; i<r.boolVec.size(); i++) {
                 res.boolVec[i]=(r.boolVec[i]==l.boolean);
             }
             } break;
@@ -1636,31 +1642,31 @@ void jkmpResult::comparenotequal(jkmpResult& res, const jkmpResult &l, const jkm
                     res.setBoolVec(l.numVec.size());
                 }
 
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 res.boolVec[i]=(l.numVec[i]!=r.numVec[i]);
             }
             } break;
         case (jkmpDoubleVector<<16)+jkmpDouble: {
             res.setBoolVec(l.numVec.size());
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 res.boolVec[i]=(l.numVec[i]!=r.num);
             }
             } break;
         case (jkmpDouble<<16)+jkmpDoubleVector: {
             res.setBoolVec(r.numVec.size());
-            for (int i=0; i<r.numVec.size(); i++) {
+            for (size_t i=0; i<r.numVec.size(); i++) {
                 res.boolVec[i]=(r.numVec[i]!=l.num);
             }
             } break;
         case (jkmpDoubleMatrix<<16)+jkmpDouble: {
             res.setBoolMatrix(l.numVec.size(), l.matrix_columns);
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 res.boolVec[i]=(l.numVec[i]!=r.num);
             }
             } break;
         case (jkmpDouble<<16)+jkmpDoubleMatrix: {
             res.setBoolMatrix(r.numVec.size(), r.matrix_columns);
-            for (int i=0; i<r.numVec.size(); i++) {
+            for (size_t i=0; i<r.numVec.size(); i++) {
                 res.boolVec[i]=(r.numVec[i]!=l.num);
             }
             } break;
@@ -1681,19 +1687,19 @@ void jkmpResult::comparenotequal(jkmpResult& res, const jkmpResult &l, const jkm
                 return;
             }
             res.setBoolVec(l.strVec.size());
-            for (int i=0; i<l.strVec.size(); i++) {
+            for (size_t i=0; i<l.strVec.size(); i++) {
                 res.boolVec[i]=(l.strVec[i]!=r.strVec[i]);
             }
             } break;
         case (jkmpStringVector<<16)+jkmpString: {
             res.setBoolVec(l.strVec.size());
-            for (int i=0; i<l.strVec.size(); i++) {
+            for (size_t i=0; i<l.strVec.size(); i++) {
                 res.boolVec[i]=(l.strVec[i]!=r.str);
             }
             } break;
         case (jkmpString<<16)+jkmpStringVector: {
             res.setBoolVec(r.strVec.size());
-            for (int i=0; i<r.strVec.size(); i++) {
+            for (size_t i=0; i<r.strVec.size(); i++) {
                 res.boolVec[i]=(r.strVec[i]!=l.str);
             }
             } break;
@@ -1720,31 +1726,31 @@ void jkmpResult::comparenotequal(jkmpResult& res, const jkmpResult &l, const jkm
                     }
                     res.setBoolVec(l.boolVec.size());
                 }
-            for (int i=0; i<l.boolVec.size(); i++) {
+            for (size_t i=0; i<l.boolVec.size(); i++) {
                 res.boolVec[i]=(l.boolVec[i]!=r.boolVec[i]);
             }
             } break;
         case (jkmpBoolVector<<16)+jkmpBool: {
             res.setBoolVec(l.boolVec.size());
-            for (int i=0; i<l.boolVec.size(); i++) {
+            for (size_t i=0; i<l.boolVec.size(); i++) {
                 res.boolVec[i]=(l.boolVec[i]!=r.boolean);
             }
             } break;
         case (jkmpBool<<16)+jkmpBoolVector: {
             res.setBoolVec(r.boolVec.size());
-            for (int i=0; i<r.boolVec.size(); i++) {
+            for (size_t i=0; i<r.boolVec.size(); i++) {
                 res.boolVec[i]=(r.boolVec[i]!=l.boolean);
             }
             } break;
         case (jkmpBoolMatrix<<16)+jkmpBool: {
             res.setBoolMatrix(l.boolVec.size(), l.matrix_columns);
-            for (int i=0; i<l.boolVec.size(); i++) {
+            for (size_t i=0; i<l.boolVec.size(); i++) {
                 res.boolVec[i]=(l.boolVec[i]!=r.boolean);
             }
             } break;
         case (jkmpBool<<16)+jkmpBoolMatrix: {
             res.setBoolMatrix(r.boolVec.size(), r.matrix_columns);
-            for (int i=0; i<r.boolVec.size(); i++) {
+            for (size_t i=0; i<r.boolVec.size(); i++) {
                 res.boolVec[i]=(r.boolVec[i]!=l.boolean);
             }
             } break;
@@ -1783,31 +1789,31 @@ void jkmpResult::comparegreater(jkmpResult& res, const jkmpResult &l, const jkmp
                     res.setBoolVec(l.numVec.size());
                 }
 
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 res.boolVec[i]=(l.numVec[i]>r.numVec[i]);
             }
             } break;
         case (jkmpDoubleVector<<16)+jkmpDouble: {
             res.setBoolVec(l.numVec.size());
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 res.boolVec[i]=(l.numVec[i]>r.num);
             }
             } break;
         case (jkmpDouble<<16)+jkmpDoubleVector: {
             res.setBoolVec(r.numVec.size());
-            for (int i=0; i<r.numVec.size(); i++) {
+            for (size_t i=0; i<r.numVec.size(); i++) {
                 res.boolVec[i]=(r.numVec[i]>l.num);
             }
             } break;
         case (jkmpDoubleMatrix<<16)+jkmpDouble: {
             res.setBoolMatrix(l.numVec.size(), l.matrix_columns);
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 res.boolVec[i]=(l.numVec[i]>r.num);
             }
             } break;
         case (jkmpDouble<<16)+jkmpDoubleMatrix: {
             res.setBoolMatrix(r.numVec.size(), r.matrix_columns);
-            for (int i=0; i<r.numVec.size(); i++) {
+            for (size_t i=0; i<r.numVec.size(); i++) {
                 res.boolVec[i]=(r.numVec[i]>l.num);
             }
             } break;
@@ -1823,19 +1829,19 @@ void jkmpResult::comparegreater(jkmpResult& res, const jkmpResult &l, const jkmp
                 return;
             }
             res.setBoolVec(l.strVec.size());
-            for (int i=0; i<l.strVec.size(); i++) {
+            for (size_t i=0; i<l.strVec.size(); i++) {
                 res.boolVec[i]=(l.strVec[i]>r.strVec[i]);
             }
             } break;
         case (jkmpStringVector<<16)+jkmpString: {
             res.setBoolVec(l.strVec.size());
-            for (int i=0; i<l.strVec.size(); i++) {
+            for (size_t i=0; i<l.strVec.size(); i++) {
                 res.boolVec[i]=(l.strVec[i]>r.str);
             }
             } break;
         case (jkmpString<<16)+jkmpStringVector: {
             res.setBoolVec(r.strVec.size());
-            for (int i=0; i<r.strVec.size(); i++) {
+            for (size_t i=0; i<r.strVec.size(); i++) {
                 res.boolVec[i]=(r.strVec[i]>l.str);
             }
             } break;
@@ -1880,31 +1886,31 @@ void jkmpResult::comparegreaterequal(jkmpResult& res, const jkmpResult &l, const
                     res.setBoolVec(l.numVec.size());
                 }
 
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 res.boolVec[i]=(l.numVec[i]>=r.numVec[i]);
             }
             } break;
         case (jkmpDoubleVector<<16)+jkmpDouble: {
             res.setBoolVec(l.numVec.size());
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 res.boolVec[i]=(l.numVec[i]>=r.num);
             }
             } break;
         case (jkmpDouble<<16)+jkmpDoubleVector: {
             res.setBoolVec(r.numVec.size());
-            for (int i=0; i<r.numVec.size(); i++) {
+            for (size_t i=0; i<r.numVec.size(); i++) {
                 res.boolVec[i]=(r.numVec[i]>=l.num);
             }
             } break;
         case (jkmpDoubleMatrix<<16)+jkmpDouble: {
             res.setBoolMatrix(l.numVec.size(), l.matrix_columns);
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 res.boolVec[i]=(l.numVec[i]>=r.num);
             }
             } break;
         case (jkmpDouble<<16)+jkmpDoubleMatrix: {
             res.setBoolMatrix(r.numVec.size(), r.matrix_columns);
-            for (int i=0; i<r.numVec.size(); i++) {
+            for (size_t i=0; i<r.numVec.size(); i++) {
                 res.boolVec[i]=(r.numVec[i]>=l.num);
             }
             } break;
@@ -1920,19 +1926,19 @@ void jkmpResult::comparegreaterequal(jkmpResult& res, const jkmpResult &l, const
                 return;
             }
             res.setBoolVec(l.strVec.size());
-            for (int i=0; i<l.strVec.size(); i++) {
+            for (size_t i=0; i<l.strVec.size(); i++) {
                 res.boolVec[i]=(l.strVec[i]>=r.strVec[i]);
             }
             } break;
         case (jkmpStringVector<<16)+jkmpString: {
             res.setBoolVec(l.strVec.size());
-            for (int i=0; i<l.strVec.size(); i++) {
+            for (size_t i=0; i<l.strVec.size(); i++) {
                 res.boolVec[i]=(l.strVec[i]>=r.str);
             }
             } break;
         case (jkmpString<<16)+jkmpStringVector: {
             res.setBoolVec(r.strVec.size());
-            for (int i=0; i<r.strVec.size(); i++) {
+            for (size_t i=0; i<r.strVec.size(); i++) {
                 res.boolVec[i]=(r.strVec[i]>=l.str);
             }
             } break;
@@ -1976,31 +1982,31 @@ void jkmpResult::comparesmaller(jkmpResult& res, const jkmpResult &l, const jkmp
                     res.setBoolVec(l.numVec.size());
                 }
 
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 res.boolVec[i]=(l.numVec[i]<r.numVec[i]);
             }
             } break;
         case (jkmpDoubleVector<<16)+jkmpDouble: {
             res.setBoolVec(l.numVec.size());
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 res.boolVec[i]=(l.numVec[i]<r.num);
             }
             } break;
         case (jkmpDouble<<16)+jkmpDoubleVector: {
             res.setBoolVec(r.numVec.size());
-            for (int i=0; i<r.numVec.size(); i++) {
+            for (size_t i=0; i<r.numVec.size(); i++) {
                 res.boolVec[i]=(r.numVec[i]<l.num);
             }
             } break;
         case (jkmpDoubleMatrix<<16)+jkmpDouble: {
             res.setBoolMatrix(l.numVec.size(), l.matrix_columns);
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 res.boolVec[i]=(l.numVec[i]<r.num);
             }
             } break;
         case (jkmpDouble<<16)+jkmpDoubleMatrix: {
             res.setBoolMatrix(r.numVec.size(), r.matrix_columns);
-            for (int i=0; i<r.numVec.size(); i++) {
+            for (size_t i=0; i<r.numVec.size(); i++) {
                 res.boolVec[i]=(r.numVec[i]<l.num);
             }
             } break;
@@ -2016,19 +2022,19 @@ void jkmpResult::comparesmaller(jkmpResult& res, const jkmpResult &l, const jkmp
                 return;
             }
             res.setBoolVec(l.strVec.size());
-            for (int i=0; i<l.strVec.size(); i++) {
+            for (size_t i=0; i<l.strVec.size(); i++) {
                 res.boolVec[i]=(l.strVec[i]<r.strVec[i]);
             }
             } break;
         case (jkmpStringVector<<16)+jkmpString: {
             res.setBoolVec(l.strVec.size());
-            for (int i=0; i<l.strVec.size(); i++) {
+            for (size_t i=0; i<l.strVec.size(); i++) {
                 res.boolVec[i]=(l.strVec[i]<r.str);
             }
             } break;
         case (jkmpString<<16)+jkmpStringVector: {
             res.setBoolVec(r.strVec.size());
-            for (int i=0; i<r.strVec.size(); i++) {
+            for (size_t i=0; i<r.strVec.size(); i++) {
                 res.boolVec[i]=(r.strVec[i]<l.str);
             }
             } break;
@@ -2069,31 +2075,31 @@ void jkmpResult::comparesmallerequal(jkmpResult& res, const jkmpResult &l, const
                     res.setBoolVec(l.numVec.size());
                 }
 
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 res.boolVec[i]=(l.numVec[i]<=r.numVec[i]);
             }
             } break;
         case (jkmpDoubleVector<<16)+jkmpDouble: {
             res.setBoolVec(l.numVec.size());
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 res.boolVec[i]=(l.numVec[i]<=r.num);
             }
             } break;
         case (jkmpDouble<<16)+jkmpDoubleVector: {
             res.setBoolVec(r.numVec.size());
-            for (int i=0; i<r.numVec.size(); i++) {
+            for (size_t i=0; i<r.numVec.size(); i++) {
                 res.boolVec[i]=(r.numVec[i]<=l.num);
             }
             } break;
         case (jkmpDoubleMatrix<<16)+jkmpDouble: {
             res.setBoolMatrix(l.numVec.size(), l.matrix_columns);
-            for (int i=0; i<l.numVec.size(); i++) {
+            for (size_t i=0; i<l.numVec.size(); i++) {
                 res.boolVec[i]=(l.numVec[i]<=r.num);
             }
             } break;
         case (jkmpDouble<<16)+jkmpDoubleMatrix: {
             res.setBoolMatrix(r.numVec.size(), r.matrix_columns);
-            for (int i=0; i<r.numVec.size(); i++) {
+            for (size_t i=0; i<r.numVec.size(); i++) {
                 res.boolVec[i]=(r.numVec[i]<=l.num);
             }
             } break;
@@ -2109,19 +2115,19 @@ void jkmpResult::comparesmallerequal(jkmpResult& res, const jkmpResult &l, const
                 return;
             }
             res.setBoolVec(l.strVec.size());
-            for (int i=0; i<l.strVec.size(); i++) {
+            for (size_t i=0; i<l.strVec.size(); i++) {
                 res.boolVec[i]=(l.strVec[i]<=r.strVec[i]);
             }
             } break;
         case (jkmpStringVector<<16)+jkmpString: {
             res.setBoolVec(l.strVec.size());
-            for (int i=0; i<l.strVec.size(); i++) {
+            for (size_t i=0; i<l.strVec.size(); i++) {
                 res.boolVec[i]=(l.strVec[i]<=r.str);
             }
             } break;
         case (jkmpString<<16)+jkmpStringVector: {
             res.setBoolVec(r.strVec.size());
-            for (int i=0; i<r.strVec.size(); i++) {
+            for (size_t i=0; i<r.strVec.size(); i++) {
                 res.boolVec[i]=(r.strVec[i]<=l.str);
             }
             } break;
@@ -2163,33 +2169,15 @@ JKMP::string jkmpResult::typeName() const
 }
 
 
-JKMP::vector<int> jkmpResult::asIntVector() const
+std::vector<int> jkmpResult::asIntVector() const
 {
-    JKMP::vector<double> dbl=asVector();
-    JKMP::vector<int> ii(dbl.size(), 0);
-    for (int i=0; i<dbl.size(); i++) {
+    std::vector<double> dbl=asVector();
+    std::vector<int> ii(dbl.size(), 0);
+    for (size_t i=0; i<dbl.size(); i++) {
         ii[i]=dbl[i];
     }
     return ii;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -18,8 +18,8 @@
 
 #include "jkmathparser.h"
 #include <typeinfo>
-
-#include "jkmathparserdefaultlib.h"
+#include <regex>
+#include "jkmpdefaultlib.h"
 #include "./StatisticsTools/statistics_tools.h"
 
 
@@ -61,8 +61,8 @@ void JKMathParser_DefaultLib::addDefaultVariables(JKMathParser* p)
     p->addVariableDouble("me", 9.1093821545E-31);
     p->addVariableDouble("mp", 1.67262163783E-27);
     p->addVariableDouble("mn", 1.67492721184E-27);
-    p->addVariableDouble("NA", QF_NAVOGADRO);
-    p->addVariableDouble("kB", QF_K_BOLTZ);
+    p->addVariableDouble("NA", JKMP_NAVOGADRO);
+    p->addVariableDouble("kB", JKMP_K_BOLTZ);
     p->addVariableDouble("kB_eV", 8.61734315E-5);
 }
 
@@ -113,9 +113,8 @@ void JKMathParser_DefaultLib::addDefaultFunctions(JKMathParser* p)
     p->addFunction("structsaveget", JKMathParser_DefaultLib::fStructGetSave);
     p->addFunction("isstruct", JKMathParser_DefaultLib::fIsStruct);
 
-    p->addFunction("sinc", JKMathParser_DefaultLib::fSinc, NULL, qfSinc);
-    p->addFunction("faddeeva_real", JKMathParser_DefaultLib::fFaddeevaRealW, NULL, qfFaddeevaRealW);
-    p->addFunction("factorial", JKMathParser_DefaultLib::fFactorial, NULL, qfFactorial);
+    p->addFunction("sinc", JKMathParser_DefaultLib::fSinc, NULL, JKMP::sinc);
+    p->addFunction("factorial", JKMathParser_DefaultLib::fFactorial, NULL, JKMP::factorial);
     p->addFunction("binomial", JKMathParser_DefaultLib::fBinom);
     p->addFunction("poisspdf", JKMathParser_DefaultLib::fPoissonPDF);
     p->addFunction("binopdf", JKMathParser_DefaultLib::fBinomialPDF);
@@ -140,7 +139,7 @@ void JKMathParser_DefaultLib::addDefaultFunctions(JKMathParser* p)
     p->addFunction("exp", JKMathParser_DefaultLib::fExp, NULL, exp);
     p->addFunction("sqrt", JKMathParser_DefaultLib::fSqrt, NULL, sqrt);
     p->addFunction("cbrt", JKMathParser_DefaultLib::fCbrt, NULL, cbrt);
-    p->addFunction("sqr", JKMathParser_DefaultLib::fSqr, NULL, qfSqrNR);
+    p->addFunction("sqr", JKMathParser_DefaultLib::fSqr, NULL, JKMP::sqrNR);
     p->addFunction("abs", JKMathParser_DefaultLib::fAbs, NULL, fabs);
     p->addFunction("erf", JKMathParser_DefaultLib::fErf, NULL, erf);
     p->addFunction("erfc", JKMathParser_DefaultLib::fErfc, NULL, erfc);
@@ -176,19 +175,18 @@ void JKMathParser_DefaultLib::addDefaultFunctions(JKMathParser* p)
     p->addFunction("int2oct", JKMathParser_DefaultLib::fIntToOctStr);
     p->addFunction("int2hex", JKMathParser_DefaultLib::fIntToHexStr);
     p->addFunction("int2str", JKMathParser_DefaultLib::fIntToStr);
-    p->addFunction("num2str", JKMathParser_DefaultLib::fdoubleToJKMP::string);
-    p->addFunction("bool2str", JKMathParser_DefaultLib::fboolToJKMP::string);
-    p->addFunction("gaussnn", JKMathParser_DefaultLib::fGauss, NULL, qfGaussSqrtE, qfGaussSqrtE);
-    p->addFunction("gauss", JKMathParser_DefaultLib::fGaussDist, NULL, qfGaussNormSqrtE, qfGaussNormSqrtE);
-    p->addFunction("slit", JKMathParser_DefaultLib::fSlit, NULL, NULL,qfSlit);
-    p->addFunction("theta", JKMathParser_DefaultLib::fTheta, NULL, qfTheta);
-    p->addFunction("tanc", JKMathParser_DefaultLib::fTanc, NULL, qfTanc);
-    p->addFunction("sigmoid", JKMathParser_DefaultLib::fSigmoid, NULL, qfSigmoid);
-    p->addFunction("sign", JKMathParser_DefaultLib::fSign, NULL, qfSign);
-    p->addFunction("roundsig", JKMathParser_DefaultLib::fRoundSig, NULL, roundError, roundError);
+    p->addFunction("num2str", JKMathParser_DefaultLib::fdoubleToStr);
+    p->addFunction("bool2str", JKMathParser_DefaultLib::fboolToStr);
+    p->addFunction("gaussnn", JKMathParser_DefaultLib::fGauss, NULL, JKMP::gaussSqrtE, JKMP::gaussSqrtE);
+    p->addFunction("gauss", JKMathParser_DefaultLib::fGaussDist, NULL, JKMP::gaussNormSqrtE, JKMP::gaussNormSqrtE);
+    p->addFunction("slit", JKMathParser_DefaultLib::fSlit, NULL, NULL,JKMP::slit);
+    p->addFunction("theta", JKMathParser_DefaultLib::fTheta, NULL, JKMP::theta);
+    p->addFunction("tanc", JKMathParser_DefaultLib::fTanc, NULL, JKMP::tanc);
+    p->addFunction("sigmoid", JKMathParser_DefaultLib::fSigmoid, NULL, JKMP::sigmoid);
+    p->addFunction("sign", JKMathParser_DefaultLib::fSign, NULL, JKMP::sign);
+    p->addFunction("roundsig", JKMathParser_DefaultLib::fRoundSig, NULL, JKMP::roundError, JKMP::roundError);
     p->addFunction("tosystempathseparator", JKMathParser_DefaultLib::fToSystemPathSeparator);
     p->addFunction("trimm", JKMathParser_DefaultLib::fTrimm);
-    p->addFunction("simplify", JKMathParser_DefaultLib::fSimplify);
     p->addFunction("split", JKMathParser_DefaultLib::fSplit);
     p->addFunction("join", JKMathParser_DefaultLib::fJoin);
     p->addFunction("removeemtystrings", JKMathParser_DefaultLib::fRemoveEmpty);
@@ -224,8 +222,8 @@ void JKMathParser_DefaultLib::addDefaultFunctions(JKMathParser* p)
     p->addFunction("findfirst", JKMathParser_DefaultLib::fFindFirst);
     p->addFunction("select", JKMathParser_DefaultLib::fSelect);
     p->addFunction("concat", JKMathParser_DefaultLib::fConcat);
-    p->addFunction("deg2rad", JKMathParser_DefaultLib::fDegToRad, NULL, qfDegToRad);
-    p->addFunction("rad2deg", JKMathParser_DefaultLib::fRadToDeg, NULL, qfRadToDeg);
+    p->addFunction("deg2rad", JKMathParser_DefaultLib::fDegToRad, NULL, JKMP::degToRad);
+    p->addFunction("rad2deg", JKMathParser_DefaultLib::fRadToDeg, NULL, JKMP::radToDeg);
     p->addFunction("dot", JKMathParser_DefaultLib::fDot);
     p->addFunction("alltrue", JKMathParser_DefaultLib::fAllTrue);
     p->addFunction("allfalse", JKMathParser_DefaultLib::fAllFalse);
@@ -334,10 +332,9 @@ void JKMathParser_DefaultLib::addDefaultFunctions(JKMathParser* p)
 
     p->addFunction("str2bool", JKMathParser_DefaultLib::fStringToBool);
     p->addFunction("str2num", JKMathParser_DefaultLib::fStringToNum);
-    p->addFunction("cstr2num", JKMathParser_DefaultLib::fCStringToNum);
 
 
-
+/*
     p->addFunction("now", JKMathParser_DefaultLib::fNow);
     p->addFunction("datenum", JKMathParser_DefaultLib::fDateNum);
     p->addFunction("datetimenum", JKMathParser_DefaultLib::fDateTimeNum);
@@ -347,15 +344,13 @@ void JKMathParser_DefaultLib::addDefaultFunctions(JKMathParser* p)
     p->addFunction("datediff2mins", JKMathParser_DefaultLib::fDatediff2Mins);
     p->addFunction("datediff2hours", JKMathParser_DefaultLib::fDatediff2Hours);
     p->addFunction("datediff2days", JKMathParser_DefaultLib::fDatediff2Days);
-
-
-
     p->addFunction("dateday", JKMathParser_DefaultLib::fDateDay);
     p->addFunction("datemonth", JKMathParser_DefaultLib::fDateMonth);
     p->addFunction("dateyear", JKMathParser_DefaultLib::fDateYear);
     p->addFunction("datehour", JKMathParser_DefaultLib::fDateHour);
     p->addFunction("datemin", JKMathParser_DefaultLib::fDateMin);
     p->addFunction("datesec", JKMathParser_DefaultLib::fDateSec);
+    */
 
     p->addFunction("varname", JKMathParser_DefaultLib::fVarname);
     p->addFunction("printexpression", JKMathParser_DefaultLib::fPrintExpression);
@@ -393,9 +388,7 @@ void JKMathParser_DefaultLib::addDefaultFunctions(JKMathParser* p)
     JKMATHPARSER_REGISTER_FUNC(fextractfilename, extract_filename)
     JKMATHPARSER_REGISTER_FUNC(fextractfilebasename, extract_basename)
 
-    JKMATHPARSER_REGISTER_FUNC(fextractfilefullbasenam, extract_complete_basename)
     JKMATHPARSER_REGISTER_FUNC(fextractfileext, extract_ext)
-    JKMATHPARSER_REGISTER_FUNC(fextractfilefullext, extract_complete_ext)
 
     JKMATHPARSER_REGISTER_FUNC(fextractfilepath, extract_file_path)
     JKMATHPARSER_REGISTER_FUNC(fextractfileabspath, extract_absolute_path)
@@ -405,7 +398,6 @@ void JKMathParser_DefaultLib::addDefaultFunctions(JKMathParser* p)
     JKMATHPARSER_REGISTER_FUNC(fReadFile, readfile)
     JKMATHPARSER_REGISTER_FUNC(fescapify, escapify)
     JKMATHPARSER_REGISTER_FUNC(fdeescapify, deescapify)
-    JKMATHPARSER_REGISTER_FUNC(fcleanStringForFilename, clean_string_for_filename)
 
 
 }
@@ -442,23 +434,23 @@ namespace JKMathParser_DefaultLib {
                 if (params[1].type==jkmpDouble) {
                     r.setDoubleVec(N, params[1].num);
                 } else if (params[1].type==jkmpDoubleVector) {
-                    r.setDoubleVec(N*params[1].length());
-                    for (uint32_t i=0; i<N*params[1].length(); i++) {
+                    r.setDoubleVec(N*params[1].size());
+                    for (uint32_t i=0; i<N*params[1].size(); i++) {
                         r.numVec[i]=params[1].numVec[i%params[1].numVec.size()];
                     }
                 } else if (params[1].type==jkmpBool) {
                     r.setBoolVec(N, params[1].boolean);
                 } else if (params[1].type==jkmpBoolVector) {
-                    r.setBoolVec(N*params[1].length());
-                    for (uint32_t i=0; i<N*params[1].length(); i++) {
+                    r.setBoolVec(N*params[1].size());
+                    for (uint32_t i=0; i<N*params[1].size(); i++) {
                         r.boolVec[i]=params[1].boolVec[i%params[1].boolVec.size()];
                     }
                 } else if (params[1].type==jkmpString) {
                     r.setStringVec(N, params[1].str);
                 } else if (params[1].type==jkmpStringVector) {
-                    r.setStringVec(N*params[1].length());
-                    for (uint32_t i=0; i<N*params[1].length(); i++) {
-                        r.strVec[i]=params[1].strVec[i%params[1].strVec.length()];
+                    r.setStringVec(N*params[1].size());
+                    for (uint32_t i=0; i<N*params[1].size(); i++) {
+                        r.strVec[i]=params[1].strVec[i%params[1].strVec.size()];
                     }
                 } else {
                     p->jkmpError(JKMP::_("repeat(x,value) the argument value is of type '%1', which cannot be replicated into a vector").arg(params[1].typeName()));
@@ -509,7 +501,7 @@ namespace JKMathParser_DefaultLib {
         JKMP::string r;
         for (int i=0; i<param.size(); i++) {
             char ch=param[i];
-            if (ch=='/' || ch=='\\') ch=QDir::separator();
+            if (ch=='/' || ch=='\\') ch=JKMP_PATHSEPARATOR_CHAR;
             r+=ch;
         }
         return r;
@@ -647,14 +639,14 @@ namespace JKMathParser_DefaultLib {
             r.setDoubleVec(params[0].numVec);
             for (int i=r.numVec.size()-1; i>=1; i--) {
                 int j=p->get_rng()->randInt(i);
-                qSwap(r.numVec[i], r.numVec[j]);
+                std::swap(r.numVec[i], r.numVec[j]);
             }
         } else if(params[0].type==jkmpStringVector) {
             //r.setStringVec(JKMathParser_shuffleS(params[0].strVec));
             r.setStringVec(params[0].strVec);
             for (int i=r.strVec.size()-1; i>=1; i--) {
                 int j=p->get_rng()->randInt(i);
-                qSwap(r.strVec[i], r.strVec[j]);
+                std::swap(r.strVec[i], r.strVec[j]);
             }
         } else if(params[0].type==jkmpString) {
             //r.setStringVec(JKMathParser_shuffleS(params[0].strVec));
@@ -670,7 +662,7 @@ namespace JKMathParser_DefaultLib {
             r.setBoolVec(params[0].boolVec);
             for (int i=r.boolVec.size()-1; i>=1; i--) {
                 int j=p->get_rng()->randInt(i);
-                qSwap(r.boolVec[i], r.boolVec[j]);
+                std::swap(r.boolVec[i], r.boolVec[j]);
             }
         } else {
             p->jkmpError(JKMP::_("%1(x) argument has to be a vector of numbers/booleans/strings").arg("shuffle"));
@@ -900,7 +892,7 @@ namespace JKMathParser_DefaultLib {
 
     void fCountOccurences(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p){
         if(n==1 && params[0].type==jkmpDoubleVector) {
-            r.setDouble(qfstatisticsCount(params[0].numVec));
+            r.setDouble(statisticsCount(params[0].numVec));
         } else if(n==2 && params[0].type==jkmpDoubleVector && params[1].type==jkmpDouble) {
             r.setDouble(params[0].numVec.count(params[1].num));
         } else if(n==2 && params[0].type==jkmpStringVector && params[1].type==jkmpString) {
@@ -1262,7 +1254,7 @@ namespace JKMathParser_DefaultLib {
       jkmpResult r;
       r.type=jkmpDouble;
       if (n==1 && params[0].type==jkmpDoubleVector) {
-          r.num=qfstatisticsMin(params[0].numVec);
+          r.num=statisticsMin(params[0].numVec.data(), params[0].numVec.size());
       } else if (n==2 && params[0].type==jkmpDouble && params[1].type==jkmpDouble) {
           r.num=fmin(params[0].num, params[1].num);
       } else {
@@ -1279,7 +1271,7 @@ namespace JKMathParser_DefaultLib {
         jkmpResult r;
         r.type=jkmpDouble;
         if (n==1 && params[0].type==jkmpDoubleVector) {
-            r.num=qfstatisticsMax(params[0].numVec);
+            r.num=statisticsMax(params[0].numVec.data(), params[0].numVec.size());
         } else if (n==2 && params[0].type==jkmpDouble && params[1].type==jkmpDouble) {
             r.num=fmax(params[0].num, params[1].num);
         } else {
@@ -1297,7 +1289,7 @@ namespace JKMathParser_DefaultLib {
             r.setInvalid();
             return;
         }
-        r.setDouble(params[0].length());
+        r.setDouble(params[0].size());
     }
 
 
@@ -1356,7 +1348,7 @@ namespace JKMathParser_DefaultLib {
             JKMP::vector<int> ii=params[1].asIntVector();
             JKMP::vector<double> dat=params[0].numVec;
             r.setDoubleVec();
-            for (int i=0; i<dat.size(); i++) {
+            for (size_t i=0; i<dat.size(); i++) {
                 if (!ii.contains(i)) {
                     r.numVec<<dat[i];
                 }
@@ -1365,7 +1357,7 @@ namespace JKMathParser_DefaultLib {
             JKMP::vector<int> ii=params[1].asIntVector();
             JKMP::stringVector dat=params[0].strVec;
             r.setStringVec();
-            for (int i=0; i<dat.size(); i++) {
+            for (size_t i=0; i<dat.size(); i++) {
                 if (!ii.contains(i)) {
                     r.strVec<<dat[i];
                 }
@@ -1374,7 +1366,7 @@ namespace JKMathParser_DefaultLib {
             JKMP::vector<int> ii=params[1].asIntVector();
             JKMP::vector<bool> dat=params[0].boolVec;
             r.setBoolVec();
-            for (int i=0; i<dat.size(); i++) {
+            for (size_t i=0; i<dat.size(); i++) {
                 if (!ii.contains(i)) {
                     r.boolVec<<dat[i];
                 }
@@ -1418,10 +1410,8 @@ namespace JKMathParser_DefaultLib {
                 r.structData=params[0].structData;
                 for (unsigned int i=1; i<n; i++) {
                     if (params[i].type==jkmpStruct) {
-                        JKMP::mapIterator<JKMP::string, jkmpResult> it(params[i].structData);
-                        while (it.hasNext()) {
-                            it.next();
-                            r.structData[it.key()]=it.value();
+                        for (auto it=params[i].structData.begin(); it!=params[i].structData.end(); ++it) {
+                            r.structData[it->first]=it->second;
                         }
                     } else {
                         p->jkmpError(JKMP::_("concat(x1, x2, ...) can only concatenate maps to  other maps, not to %1 in argument %2").arg(params[i].typeName()).arg(i+1));
@@ -1434,7 +1424,7 @@ namespace JKMathParser_DefaultLib {
                 r.numVec.clear();
                 for (unsigned int i=0; i<n; i++) {
                     if (params[i].convertsToVector()) {
-                        r.numVec+=params[i].asVector();
+                        r.numVec<<params[i].asVector();
                     } else {
                         p->jkmpError(JKMP::_("concat(x1, x2, ...) needs one or more vectors or vectorelements as arguments (all have to have the same type)"));
                         r.setInvalid();
@@ -1446,7 +1436,7 @@ namespace JKMathParser_DefaultLib {
                 r.boolVec.clear();
                 for (unsigned int i=0; i<n; i++) {
                     if (params[i].convertsToBoolVector()) {
-                        r.boolVec+=params[i].asBoolVector();
+                        r.boolVec<<params[i].asBoolVector();
                     } else {
                         p->jkmpError(JKMP::_("concat(x1, x2, ...) needs one or more vectors or vectorelements as arguments (all have to have the same type)"));
                         r.setInvalid();
@@ -1458,7 +1448,7 @@ namespace JKMathParser_DefaultLib {
                 r.strVec.clear();
                 for (unsigned int i=0; i<n; i++) {
                     if (params[i].convertsToStringVector()) {
-                        r.strVec.push_back(params[i].asStrVector());
+                        r.strVec<<params[i].asStrVector();
                     } else {
                         p->jkmpError(JKMP::_("concat(x1, x2, ...) needs one or more vectors or vectorelements as arguments (all have to have the same type)"));
                         r.setInvalid();
@@ -1480,7 +1470,7 @@ namespace JKMathParser_DefaultLib {
             r.type=jkmpDoubleVector;
             r.numVec.clear();
             r.isValid=true;
-            for (int i=0; i<dat.size(); i++) {
+            for (size_t i=0; i<dat.size(); i++) {
                 if (dat[i]!=params[1].num) {
                     r.numVec<<dat[i];
                 }
@@ -1490,7 +1480,7 @@ namespace JKMathParser_DefaultLib {
             r.type=jkmpBoolVector;
             r.boolVec.clear();
             r.isValid=true;
-            for (int i=0; i<dat.size(); i++) {
+            for (size_t i=0; i<dat.size(); i++) {
                 if (dat[i]!=params[1].boolean) {
                     r.boolVec<<dat[i];
                 }
@@ -1500,7 +1490,7 @@ namespace JKMathParser_DefaultLib {
             r.type=jkmpStringVector;
             r.strVec.clear();
             r.isValid=true;
-            for (int i=0; i<dat.size(); i++) {
+            for (size_t i=0; i<dat.size(); i++) {
                 if (dat[i]!=params[1].str) {
                     r.strVec<<dat[i];
                 }
@@ -1521,8 +1511,8 @@ namespace JKMathParser_DefaultLib {
             r.type=jkmpDoubleVector;
             r.numVec.clear();
             r.isValid=true;
-            for (int i=0; i<dat.size(); i++) {
-                if (QFFloatIsOK(dat[i])) {
+            for (size_t i=0; i<dat.size(); i++) {
+                if (JKMP_FloatIsOK(dat[i])) {
                     r.numVec<<dat[i];
                 }
             }
@@ -1540,7 +1530,7 @@ namespace JKMathParser_DefaultLib {
             r.type=jkmpDoubleVector;
             r.numVec.clear();
             r.isValid=true;
-            for (int i=0; i<dat.size(); i++) {
+            for (size_t i=0; i<dat.size(); i++) {
                 if (dat[i]==params[1].num) {
                     r.numVec<<i;
                 }
@@ -1550,7 +1540,7 @@ namespace JKMathParser_DefaultLib {
             r.type=jkmpDoubleVector;
             r.numVec.clear();
             r.isValid=true;
-            for (int i=0; i<dat.size(); i++) {
+            for (size_t i=0; i<dat.size(); i++) {
                 if (dat[i]==params[1].boolean) {
                     r.numVec<<i;
                 }
@@ -1560,7 +1550,7 @@ namespace JKMathParser_DefaultLib {
             r.type=jkmpDoubleVector;
             r.numVec.clear();
             r.isValid=true;
-            for (int i=0; i<dat.size(); i++) {
+            for (size_t i=0; i<dat.size(); i++) {
                 if (dat[i]) {
                     r.numVec<<i;
                 }
@@ -1570,7 +1560,7 @@ namespace JKMathParser_DefaultLib {
             r.type=jkmpDoubleVector;
             r.numVec.clear();
             r.isValid=true;
-            for (int i=0; i<dat.size(); i++) {
+            for (size_t i=0; i<dat.size(); i++) {
                 if (dat[i]==params[1].str) {
                     r.numVec<<i;
                 }
@@ -1590,7 +1580,7 @@ namespace JKMathParser_DefaultLib {
             r.type=jkmpDouble;
             r.num=-1;
             r.isValid=true;
-            for (int i=0; i<dat.size(); i++) {
+            for (size_t i=0; i<dat.size(); i++) {
                 if (dat[i]==params[1].num) {
                     r.num=i;
                     break;
@@ -1601,7 +1591,7 @@ namespace JKMathParser_DefaultLib {
             r.type=jkmpDoubleVector;
             r.type=jkmpDouble;
             r.num=-1;
-            for (int i=0; i<dat.size(); i++) {
+            for (size_t i=0; i<dat.size(); i++) {
                 if (dat[i]==params[1].boolean) {
                     r.num=i;
                     break;
@@ -1612,7 +1602,7 @@ namespace JKMathParser_DefaultLib {
             r.type=jkmpDoubleVector;
             r.type=jkmpDouble;
             r.num=-1;
-            for (int i=0; i<dat.size(); i++) {
+            for (size_t i=0; i<dat.size(); i++) {
                 if (dat[i]) {
                     r.num=i;
                     break;
@@ -1623,7 +1613,7 @@ namespace JKMathParser_DefaultLib {
             r.type=jkmpDoubleVector;
             r.type=jkmpDouble;
             r.num=-1;
-            for (int i=0; i<dat.size(); i++) {
+            for (size_t i=0; i<dat.size(); i++) {
                 if (dat[i]==params[1].str) {
                     r.num=i;
                     break;
@@ -1634,10 +1624,10 @@ namespace JKMathParser_DefaultLib {
             r.type=jkmpDoubleVector;
             r.numVec.clear();
             r.isValid=true;
-            for (int j=0; j<params[1].numVec.size(); j++) {
+            for (size_t j=0; j<params[1].numVec.size(); j++) {
                 int add=-1;
                 double v=params[1].numVec[j];
-                for (int i=0; i<dat.size(); i++) {
+                for (size_t i=0; i<dat.size(); i++) {
                     if (dat[i]==v) {
                         add=i;
                         break;
@@ -1650,10 +1640,10 @@ namespace JKMathParser_DefaultLib {
             r.type=jkmpDoubleVector;
             r.numVec.clear();
             r.isValid=true;
-            for (int j=0; j<params[1].strVec.size(); j++) {
+            for (size_t j=0; j<params[1].strVec.size(); j++) {
                 int add=-1;
                 JKMP::string v=params[1].strVec[j];
-                for (int i=0; i<dat.size(); i++) {
+                for (size_t i=0; i<dat.size(); i++) {
                     if (dat[i]==v) {
                         add=i;
                         break;
@@ -1666,10 +1656,10 @@ namespace JKMathParser_DefaultLib {
             r.type=jkmpDoubleVector;
             r.numVec.clear();
             r.isValid=true;
-            for (int j=0; j<params[1].numVec.size(); j++) {
+            for (size_t j=0; j<params[1].numVec.size(); j++) {
                 int add=-1;
                 bool v=params[1].boolVec[j];
-                for (int i=0; i<dat.size(); i++) {
+                for (size_t i=0; i<dat.size(); i++) {
                     if (dat[i]==v) {
                         add=i;
                         break;
@@ -1722,12 +1712,12 @@ namespace JKMathParser_DefaultLib {
             r.isValid=true;
         } else if (n==2 && params[0].type==jkmpStringVector && params[1].type==jkmpString) {
             r.type=jkmpBool;
-            r.boolean=params[0].strVec.contains(params[1].str, Qt::CaseInsensitive);
+            r.boolean=params[0].strVec.contains(params[1].str, false);
             r.isValid=true;
         } else if (n==2 && params[0].type==jkmpString && params[1].type==jkmpString) {
             const JKMP::string& dat=params[0].str;
             r.type=jkmpBool;
-            r.boolean=dat.contains(params[1].str, Qt::CaseInsensitive);
+            r.boolean=dat.contains(params[1].str, false);
         } else {
             p->jkmpError(JKMP::_("contains_caseinsensitive(x, value) needs two arguments: one vector x and a corresponding element value (or vector)"));
             r.setInvalid();
@@ -1743,7 +1733,7 @@ namespace JKMathParser_DefaultLib {
             const JKMP::stringVector& dat=params[0].strVec;
             r.type=jkmpBoolVector;
             r.boolVec.clear();
-            for (int i=0; i<dat.size(); i++) {
+            for (size_t i=0; i<dat.size(); i++) {
                 bool f=false;
                 if (dat[i].contains(params[1].str)) {
                     f=true;
@@ -1760,7 +1750,7 @@ namespace JKMathParser_DefaultLib {
             r.type=jkmpDoubleVector;
             r.numVec.clear();
             r.isValid=true;
-            for (int i=0; i<dat.size(); i++) {
+            for (size_t i=0; i<dat.size(); i++) {
                 int add=-1;
                 for (int j=0; j<params[1].strVec.size(); j++) {
                     JKMP::string v=params[1].strVec[j];
@@ -1795,9 +1785,9 @@ namespace JKMathParser_DefaultLib {
             const JKMP::stringVector& dat=params[0].strVec;
             r.type=jkmpBoolVector;
             r.boolVec.clear();
-            for (int i=0; i<dat.size(); i++) {
+            for (size_t i=0; i<dat.size(); i++) {
                 bool f=false;
-                if (dat[i].contains(params[1].str, Qt::CaseInsensitive)) {
+                if (dat[i].contains(params[1].str, false)) {
                     f=true;
                     break;
                 }
@@ -1806,17 +1796,17 @@ namespace JKMathParser_DefaultLib {
         } else if (n==2 && params[0].type==jkmpString && params[1].type==jkmpString) {
             const JKMP::string& dat=params[0].str;
             r.type=jkmpBool;
-            r.boolean=dat.contains(params[1].str, Qt::CaseInsensitive);
+            r.boolean=dat.contains(params[1].str, false);
         } else  if (n==2 && params[0].type==jkmpStringVector && params[1].type==jkmpStringVector) {
             const JKMP::stringVector& dat=params[0].strVec;
             r.type=jkmpDoubleVector;
             r.numVec.clear();
             r.isValid=true;
-            for (int i=0; i<dat.size(); i++) {
+            for (size_t i=0; i<dat.size(); i++) {
                 int add=-1;
-                for (int j=0; j<params[1].strVec.size(); j++) {
+                for (size_t j=0; j<params[1].strVec.size(); j++) {
                     JKMP::string v=params[1].strVec[j];
-                    if (dat[i].contains(v, Qt::CaseInsensitive)) {
+                    if (dat[i].contains(v, false)) {
                         add=j;
                         break;
                     }
@@ -1827,8 +1817,8 @@ namespace JKMathParser_DefaultLib {
             r.type=jkmpDouble;
             r.num=-1;
             r.isValid=true;
-            for (int j=0; j<params[1].strVec.size(); j++) {
-                if (params[0].str.contains(params[1].strVec[j], Qt::CaseInsensitive)) {
+            for (size_t j=0; j<params[1].strVec.size(); j++) {
+                if (params[0].str.contains(params[1].strVec[j], false)) {
                     r.num=j;
                     break;
                 }
@@ -1851,7 +1841,7 @@ namespace JKMathParser_DefaultLib {
             r.type=jkmpDoubleVector;
             r.numVec.clear();
             r.isValid=true;
-            for (int i=0; i<dat.size(); i++) {
+            for (size_t i=0; i<dat.size(); i++) {
                 if (params[1].boolVec[i]) {
                     r.numVec<<dat[i];
                 }
@@ -1866,7 +1856,7 @@ namespace JKMathParser_DefaultLib {
             r.type=jkmpBoolVector;
             r.boolVec.clear();
             r.isValid=true;
-            for (int i=0; i<dat.size(); i++) {
+            for (size_t i=0; i<dat.size(); i++) {
                 if (params[1].boolVec[i]) {
                     r.boolVec<<dat[i];
                 }
@@ -1882,7 +1872,7 @@ namespace JKMathParser_DefaultLib {
             r.type=jkmpStringVector;
             r.strVec.clear();
             r.isValid=true;
-            for (int i=0; i<dat.size(); i++) {
+            for (size_t i=0; i<dat.size(); i++) {
                 if (params[1].boolVec[i]) {
                     r.strVec<<dat[i];
                 }
@@ -1897,17 +1887,17 @@ namespace JKMathParser_DefaultLib {
         r.setInvalid();
         if (n==1 && params[0].type==jkmpDoubleVector) {
             r.setDoubleVec(params[0].numVec);
-            for (int i=0; i<r.numVec.size(); i++) {
+            for (size_t i=0; i<r.numVec.size(); i++) {
                 r.numVec[i]=params[0].numVec[r.numVec.size()-i-1];
             }
         } else if (n==1 && params[0].type==jkmpStringVector) {
             r.setStringVec(params[0].strVec);
-            for (int i=0; i<r.strVec.size(); i++) {
+            for (size_t i=0; i<r.strVec.size(); i++) {
                 r.strVec[i]=params[0].strVec[r.strVec.size()-i-1];
             }
         } else if (n==1 && params[0].type==jkmpBoolVector) {
             r.setBoolVec(params[0].boolVec);
-            for (int i=0; i<r.boolVec.size(); i++) {
+            for (size_t i=0; i<r.boolVec.size(); i++) {
                 r.boolVec[i]=params[0].boolVec[r.boolVec.size()-i-1];
             }
         } else {
@@ -1935,7 +1925,7 @@ namespace JKMathParser_DefaultLib {
             JKMP::vector<double> out;
             const JKMP::vector<double>& in=params[0].numVec;
 
-            for (int i=0; i<in.size(); i++) {
+            for (size_t i=0; i<in.size(); i++) {
                 if (!out.contains(in[i])) out<<in[i];
             }
 
@@ -1947,7 +1937,7 @@ namespace JKMathParser_DefaultLib {
             JKMP::stringVector out;
             const JKMP::stringVector& in=params[0].strVec;
 
-            for (int i=0; i<in.size(); i++) {
+            for (size_t i=0; i<in.size(); i++) {
                 if (!out.contains(in[i])) out<<in[i];
             }
 
@@ -1959,7 +1949,7 @@ namespace JKMathParser_DefaultLib {
             JKMP::vector<bool> out;
             const JKMP::vector<bool>& in=params[0].boolVec;
 
-            for (int i=0; i<in.size(); i++) {
+            for (size_t i=0; i<in.size(); i++) {
                 if (!out.contains(in[i])) out<<in[i];
                 if (out.size()>1) break;
             }
@@ -1978,17 +1968,17 @@ namespace JKMathParser_DefaultLib {
         jkmpResult res=jkmpResult::invalidResult();
 
         if (n!=2) p->jkmpError("indexedmean(data, index) needs 2 argument");
-        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].length()==params[1].length()) {
+        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].size()==params[1].size()) {
             JKMP::vector<double> d=params[0].asVector();
 
             if (params[1].type==jkmpDouble || params[1].type==jkmpDoubleVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asVector(), qfstatisticsAverage<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asVector(), statisticsAverageV<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpBool || params[1].type==jkmpBoolVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asBoolVector(), qfstatisticsAverage<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asBoolVector(), statisticsAverageV<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpString || params[1].type==jkmpStringVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asStrVector(), qfstatisticsAverage<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asStrVector(), statisticsAverageV<JKMP::vector<double> >));
             }
         } else {
             p->jkmpError("indexedmean(data, index) needs a number vector as data argument and an equal sized index array of any type");
@@ -2001,17 +1991,17 @@ namespace JKMathParser_DefaultLib {
         jkmpResult res=jkmpResult::invalidResult();
 
         if (n!=2) p->jkmpError("indexedvar(data, index) needs 2 argument");
-        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].length()==params[1].length()) {
+        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].size()==params[1].size()) {
             JKMP::vector<double> d=params[0].asVector();
 
             if (params[1].type==jkmpDouble || params[1].type==jkmpDoubleVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asVector(), qfstatisticsVariance<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asVector(), statisticsVarianceV<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpBool || params[1].type==jkmpBoolVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asBoolVector(), qfstatisticsVariance<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asBoolVector(), statisticsVarianceV<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpString || params[1].type==jkmpStringVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asStrVector(), qfstatisticsVariance<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asStrVector(), statisticsVarianceV<JKMP::vector<double> >));
             }
         } else {
             p->jkmpError("indexedvar(data, index) needs a number vector as data argument and an equal sized index array of any type");
@@ -2020,21 +2010,23 @@ namespace JKMathParser_DefaultLib {
         return res;
     }
 
+
+
     jkmpResult fIndexedStd(const jkmpResult* params, unsigned int  n, JKMathParser* p) {
         jkmpResult res=jkmpResult::invalidResult();
 
         if (n!=2) p->jkmpError("indexedstd(data, index) needs 2 argument");
-        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].length()==params[1].length()) {
+        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].size()==params[1].size()) {
             JKMP::vector<double> d=params[0].asVector();
 
             if (params[1].type==jkmpDouble || params[1].type==jkmpDoubleVector) {
-                return jkmpResult(qfUniqueApplyFunction<double, double, qfDoubleVectorToDoubleFunc>(d, params[1].asVector(), qfstatisticsStd<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asVector(), statisticsStdDevV<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpBool || params[1].type==jkmpBoolVector) {
-                return jkmpResult(qfUniqueApplyFunction<double, bool, qfDoubleVectorToDoubleFunc>(d, params[1].asBoolVector(), qfstatisticsStd<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asBoolVector(), statisticsStdDevV<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpString || params[1].type==jkmpStringVector) {
-                return jkmpResult(qfUniqueApplyFunction<double, JKMP::string, qfDoubleVectorToDoubleFunc>(d, params[1].asStrVector(), qfstatisticsStd<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asStrVector(), statisticsStdDevV<JKMP::vector<double> >));
             }
         } else {
             p->jkmpError("indexedstd(data, index) needs a number vector as data argument and an equal sized index array of any type");
@@ -2047,17 +2039,17 @@ namespace JKMathParser_DefaultLib {
         jkmpResult res=jkmpResult::invalidResult();
 
         if (n!=2) p->jkmpError("indexedsum(data, index) needs 2 argument");
-        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].length()==params[1].length()) {
+        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].size()==params[1].size()) {
             JKMP::vector<double> d=params[0].asVector();
 
             if (params[1].type==jkmpDouble || params[1].type==jkmpDoubleVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asVector(), qfstatisticsSum<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asVector(), statisticsSumV<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpBool || params[1].type==jkmpBoolVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asBoolVector(), qfstatisticsSum<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asBoolVector(), statisticsSumV<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpString || params[1].type==jkmpStringVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asStrVector(), qfstatisticsSum<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asStrVector(), statisticsSumV<JKMP::vector<double> >));
             }
         } else {
             p->jkmpError("indexedsum(data, index) needs a number vector as data argument and an equal sized index array of any type");
@@ -2070,17 +2062,17 @@ namespace JKMathParser_DefaultLib {
         jkmpResult res=jkmpResult::invalidResult();
 
         if (n!=2) p->jkmpError("indexedsum2(data, index) needs 2 argument");
-        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].length()==params[1].length()) {
+        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].size()==params[1].size()) {
             JKMP::vector<double> d=params[0].asVector();
 
             if (params[1].type==jkmpDouble || params[1].type==jkmpDoubleVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asVector(), qfstatisticsSum2<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asVector(), statisticsSum2V<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpBool || params[1].type==jkmpBoolVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asBoolVector(), qfstatisticsSum2<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asBoolVector(), statisticsSum2V<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpString || params[1].type==jkmpStringVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asStrVector(), qfstatisticsSum2<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asStrVector(), statisticsSum2V<JKMP::vector<double> >));
             }
         } else {
             p->jkmpError("indexedsum2(data, index) needs a number vector as data argument and an equal sized index array of any type");
@@ -2094,17 +2086,17 @@ namespace JKMathParser_DefaultLib {
         jkmpResult res=jkmpResult::invalidResult();
 
         if (n!=2) p->jkmpError("indexedmedian(data, index) needs 2 argument");
-        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].length()==params[1].length()) {
+        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].size()==params[1].size()) {
             JKMP::vector<double> d=params[0].asVector();
 
             if (params[1].type==jkmpDouble || params[1].type==jkmpDoubleVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asVector(), qfstatisticsMedian<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asVector(), statisticsMedianV<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpBool || params[1].type==jkmpBoolVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asBoolVector(), qfstatisticsMedian<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asBoolVector(), statisticsMedianV<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpString || params[1].type==jkmpStringVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asStrVector(), qfstatisticsMedian<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asStrVector(), statisticsMedianV<JKMP::vector<double> >));
             }
         } else {
             p->jkmpError("indexedmedian(data, index) needs a number vector as data argument and an equal sized index array of any type");
@@ -2119,17 +2111,17 @@ namespace JKMathParser_DefaultLib {
         jkmpResult res=jkmpResult::invalidResult();
 
         if (n!=2) p->jkmpError("indexedmad(data, index) needs 2 argument");
-        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].length()==params[1].length()) {
+        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].size()==params[1].size()) {
             JKMP::vector<double> d=params[0].asVector();
 
             if (params[1].type==jkmpDouble || params[1].type==jkmpDoubleVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asVector(), qfstatisticsMADS<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asVector(), statisticsMADV<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpBool || params[1].type==jkmpBoolVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asBoolVector(), qfstatisticsMADS<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asBoolVector(), statisticsMADV<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpString || params[1].type==jkmpStringVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asStrVector(), qfstatisticsMADS<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asStrVector(), statisticsMADV<JKMP::vector<double> >));
             }
         } else {
             p->jkmpError("indexedmad(data, index) needs a number vector as data argument and an equal sized index array of any type");
@@ -2142,17 +2134,17 @@ namespace JKMathParser_DefaultLib {
         jkmpResult res=jkmpResult::invalidResult();
 
         if (n!=2) p->jkmpError("indexedmad(data, index) needs 2 argument");
-        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].length()==params[1].length()) {
+        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].size()==params[1].size()) {
             JKMP::vector<double> d=params[0].asVector();
 
             if (params[1].type==jkmpDouble || params[1].type==jkmpDoubleVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asVector(), qfstatisticsNMADS<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asVector(), statisticsNMADV<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpBool || params[1].type==jkmpBoolVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asBoolVector(), qfstatisticsNMADS<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asBoolVector(), statisticsNMADV<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpString || params[1].type==jkmpStringVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asStrVector(), qfstatisticsNMADS<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asStrVector(), statisticsNMADV<JKMP::vector<double> >));
             }
         } else {
             p->jkmpError("indexedmad(data, index) needs a number vector as data argument and an equal sized index array of any type");
@@ -2166,17 +2158,17 @@ namespace JKMathParser_DefaultLib {
         jkmpResult res=jkmpResult::invalidResult();
 
         if (n!=2) p->jkmpError("indexedmin(data, index) needs 2 argument");
-        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].length()==params[1].length()) {
+        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].size()==params[1].size()) {
             JKMP::vector<double> d=params[0].asVector();
 
             if (params[1].type==jkmpDouble || params[1].type==jkmpDoubleVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asVector(), qfstatisticsMin<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asVector(), statisticsMinV<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpBool || params[1].type==jkmpBoolVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asBoolVector(), qfstatisticsMin<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asBoolVector(), statisticsMinV<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpString || params[1].type==jkmpStringVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asStrVector(), qfstatisticsMin<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asStrVector(), statisticsMinV<JKMP::vector<double> >));
             }
         } else {
             p->jkmpError("indexedmin(data, index) needs a number vector as data argument and an equal sized index array of any type");
@@ -2189,17 +2181,17 @@ namespace JKMathParser_DefaultLib {
         jkmpResult res=jkmpResult::invalidResult();
 
         if (n!=2) p->jkmpError("indexedmax(data, index) needs 2 argument");
-        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].length()==params[1].length()) {
+        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].size()==params[1].size()) {
             JKMP::vector<double> d=params[0].asVector();
 
             if (params[1].type==jkmpDouble || params[1].type==jkmpDoubleVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asVector(), qfstatisticsMax<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asVector(), statisticsMaxV<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpBool || params[1].type==jkmpBoolVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asBoolVector(), qfstatisticsMax<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asBoolVector(), statisticsMaxV<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpString || params[1].type==jkmpStringVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asStrVector(), qfstatisticsMax<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asStrVector(), statisticsMaxV<JKMP::vector<double> >));
             }
         } else {
             p->jkmpError("indexedmax(data, index) needs a number vector as data argument and an equal sized index array of any type");
@@ -2212,17 +2204,17 @@ namespace JKMathParser_DefaultLib {
         jkmpResult res=jkmpResult::invalidResult();
 
         if (n!=3) p->jkmpError("indexedquantile(data, index, quantile) needs 3 argument");
-        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].length()==params[1].length() && params[2].type==jkmpDouble) {
+        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].size()==params[1].size() && params[2].type==jkmpDouble) {
             JKMP::vector<double> d=params[0].asVector();
 
             if (params[1].type==jkmpDouble || params[1].type==jkmpDoubleVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asVector(), qfstatisticsQuantile<JKMP::vector<double> >, params[2].num));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asVector(), statisticsQuantileV<JKMP::vector<double> >, params[2].num));
             }
             if (params[1].type==jkmpBool || params[1].type==jkmpBoolVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asBoolVector(), qfstatisticsQuantile<JKMP::vector<double> >, params[2].num));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asBoolVector(), statisticsQuantileV<JKMP::vector<double> >, params[2].num));
             }
             if (params[1].type==jkmpString || params[1].type==jkmpStringVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asStrVector(), qfstatisticsQuantile<JKMP::vector<double> >, params[2].num));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asStrVector(), statisticsQuantileV<JKMP::vector<double> >, params[2].num));
             }
         } else {
             p->jkmpError("indexedquantile(data, index, quantile) needs a number vector as data argument and an equal sized index array of any type");
@@ -2236,17 +2228,17 @@ namespace JKMathParser_DefaultLib {
         jkmpResult res=jkmpResult::invalidResult();
 
         if (n!=2) p->jkmpError("indexedskewness(data, index) needs 2 argument");
-        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].length()==params[1].length()) {
+        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].size()==params[1].size()) {
             JKMP::vector<double> d=params[0].asVector();
 
             if (params[1].type==jkmpDouble || params[1].type==jkmpDoubleVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asVector(), qfstatisticsSkewness<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asVector(), statisticsSkewnessV<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpBool || params[1].type==jkmpBoolVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asBoolVector(), qfstatisticsSkewness<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asBoolVector(), statisticsSkewnessV<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpString || params[1].type==jkmpStringVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asStrVector(), qfstatisticsSkewness<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asStrVector(), statisticsSkewnessV<JKMP::vector<double> >));
             }
         } else {
             p->jkmpError("indexedskewness(data, index) needs a number vector as data argument and an equal sized index array of any type");
@@ -2259,17 +2251,17 @@ namespace JKMathParser_DefaultLib {
         jkmpResult res=jkmpResult::invalidResult();
 
         if (n!=2) p->jkmpError("indexedprod(data, index) needs 2 argument");
-        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].length()==params[1].length()) {
+        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].size()==params[1].size()) {
             JKMP::vector<double> d=params[0].asVector();
 
             if (params[1].type==jkmpDouble || params[1].type==jkmpDoubleVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asVector(), qfstatisticsProd<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asVector(), statisticsProdV<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpBool || params[1].type==jkmpBoolVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asBoolVector(), qfstatisticsProd<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asBoolVector(), statisticsProdV<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpString || params[1].type==jkmpStringVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asStrVector(), qfstatisticsProd<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asStrVector(), statisticsProdV<JKMP::vector<double> >));
             }
         } else {
             p->jkmpError("indexedprod(data, index) needs a number vector as data argument and an equal sized index array of any type");
@@ -2282,17 +2274,17 @@ namespace JKMathParser_DefaultLib {
         jkmpResult res=jkmpResult::invalidResult();
 
         if (n!=2) p->jkmpError("indexedcount(data, index) needs 2 argument");
-        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].length()==params[1].length()) {
+        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].size()==params[1].size()) {
             JKMP::vector<double> d=params[0].asVector();
 
             if (params[1].type==jkmpDouble || params[1].type==jkmpDoubleVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asVector(), qfstatisticsCount<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asVector(), statisticsCount<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpBool || params[1].type==jkmpBoolVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asBoolVector(), qfstatisticsCount<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asBoolVector(), statisticsCount<JKMP::vector<double> >));
             }
             if (params[1].type==jkmpString || params[1].type==jkmpStringVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asStrVector(), qfstatisticsCount<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asStrVector(), statisticsCount<JKMP::vector<double> >));
             }
         } else {
             p->jkmpError("indexedcount(data, index) needs a number vector as data argument and an equal sized index array of any type");
@@ -2306,17 +2298,17 @@ namespace JKMathParser_DefaultLib {
         jkmpResult res=jkmpResult::invalidResult();
 
         if (n!=3) p->jkmpError("indexedmoment(data, index, order) needs 3 argument");
-        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].length()==params[1].length() && params[2].type==jkmpDouble) {
+        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].size()==params[1].size() && params[2].type==jkmpDouble) {
             JKMP::vector<double> d=params[0].asVector();
 
             if (params[1].type==jkmpDouble || params[1].type==jkmpDoubleVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asVector(), qfstatisticsCentralMoment<JKMP::vector<double> >, params[2].toInteger()));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asVector(), statisticsCentralMomentV<JKMP::vector<double> >, params[2].toInteger()));
             }
             if (params[1].type==jkmpBool || params[1].type==jkmpBoolVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asBoolVector(), qfstatisticsCentralMoment<JKMP::vector<double> >, params[2].toInteger()));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asBoolVector(), statisticsCentralMomentV<JKMP::vector<double> >, params[2].toInteger()));
             }
             if (params[1].type==jkmpString || params[1].type==jkmpStringVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asStrVector(), qfstatisticsCentralMoment<JKMP::vector<double> >, params[2].toInteger()));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asStrVector(), statisticsCentralMomentV<JKMP::vector<double> >, params[2].toInteger()));
             }
         } else {
             p->jkmpError("indexedmoment(data, index, order) needs a number vector as data argument and an equal sized index array of any type");
@@ -2329,17 +2321,17 @@ namespace JKMathParser_DefaultLib {
         jkmpResult res=jkmpResult::invalidResult();
 
         if (n!=3) p->jkmpError("indexedncmoment(data, index, order) needs 3 argument");
-        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].length()==params[1].length() && params[2].type==jkmpDouble) {
+        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && params[0].size()==params[1].size() && params[2].type==jkmpDouble) {
             JKMP::vector<double> d=params[0].asVector();
 
             if (params[1].type==jkmpDouble || params[1].type==jkmpDoubleVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asVector(), qfstatisticsMoment<JKMP::vector<double> >, params[2].toInteger()));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asVector(), statisticsMomentV<JKMP::vector<double> >, params[2].toInteger()));
             }
             if (params[1].type==jkmpBool || params[1].type==jkmpBoolVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asBoolVector(), qfstatisticsMoment<JKMP::vector<double> >, params[2].toInteger()));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asBoolVector(), statisticsMomentV<JKMP::vector<double> >, params[2].toInteger()));
             }
             if (params[1].type==jkmpString || params[1].type==jkmpStringVector) {
-                return jkmpResult(qfUniqueApplyFunction(d, params[1].asStrVector(), qfstatisticsMoment<JKMP::vector<double> >, params[2].toInteger()));
+                return jkmpResult(JKMP::uniqueApplyFunction(d, params[1].asStrVector(), statisticsMomentV<JKMP::vector<double> >, params[2].toInteger()));
             }
         } else {
             p->jkmpError("indexedncmoment(data, index, order) needs a number vector as data argument and an equal sized index array of any type");
@@ -2352,21 +2344,21 @@ namespace JKMathParser_DefaultLib {
         jkmpResult res=jkmpResult::invalidResult();
 
         if (n!=3) p->jkmpError("indexedcorrcoeff(dataX, dataY, index) needs 3 argument");
-        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && ((params[1].type==jkmpDoubleVector)||(params[1].type==jkmpDouble)) && params[0].length()==params[2].length() && params[1].length()==params[2].length()) {
+        else if (((params[0].type==jkmpDoubleVector)||(params[0].type==jkmpDouble)) && ((params[1].type==jkmpDoubleVector)||(params[1].type==jkmpDouble)) && params[0].size()==params[2].size() && params[1].size()==params[2].size()) {
             JKMP::vector<double> d=params[0].asVector();
             JKMP::vector<double> dy=params[1].asVector();
 
             if (params[2].type==jkmpDouble || params[2].type==jkmpDoubleVector) {
-                return jkmpResult(qfUniqueApplyFunction2I(d, dy, params[2].asVector(), qfstatisticsCorrCoeff<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction2I(d, dy, params[2].asVector(), statisticsCorrelationCoefficientV<JKMP::vector<double> >));
             }
             if (params[2].type==jkmpBool || params[2].type==jkmpBoolVector) {
-                return jkmpResult(qfUniqueApplyFunction2I(d, dy, params[2].asBoolVector(), qfstatisticsCorrCoeff<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction2I(d, dy, params[2].asBoolVector(), statisticsCorrelationCoefficientV<JKMP::vector<double> >));
             }
             if (params[2].type==jkmpString || params[2].type==jkmpStringVector) {
-                return jkmpResult(qfUniqueApplyFunction2I(d, dy, params[2].asStrVector(), qfstatisticsCorrCoeff<JKMP::vector<double> >));
+                return jkmpResult(JKMP::uniqueApplyFunction2I(d, dy, params[2].asStrVector(), statisticsCorrelationCoefficientV<JKMP::vector<double> >));
             }
         } else {
-            p->jkmpError(JKMP::_("indexedcorrcoeff(dataX, dataY, index) needs a number vector as data argument and an equal sized index array of any type [len(dataX)=%1, len(dataY)=%2, len(idx)=%3]").arg(params[0].length()).arg(params[1].length()).arg(params[2].length()));
+            p->jkmpError(JKMP::_("indexedcorrcoeff(dataX, dataY, index) needs a number vector as data argument and an equal sized index array of any type [len(dataX)=%1, len(dataY)=%2, len(idx)=%3]").arg(params[0].size()).arg(params[1].size()).arg(params[2].size()));
         }
 
         return res;
@@ -2469,7 +2461,7 @@ namespace JKMathParser_DefaultLib {
                 res.setDoubleVec(items*params[1].numVec.size());
                 int n=0;
                 for (int i=0; i<items; i++) {
-                    for (int j=0; j<params[1].numVec.size(); j++) {
+                    for (size_t j=0; j<params[1].numVec.size(); j++) {
                         res.numVec[n]=params[1].numVec[j];
                         n++;
                     }
@@ -2478,7 +2470,7 @@ namespace JKMathParser_DefaultLib {
                 res.setStringVec(items*params[1].strVec.size());
                 int n=0;
                 for (int i=0; i<items; i++) {
-                    for (int j=0; j<params[1].strVec.size(); j++) {
+                    for (size_t j=0; j<params[1].strVec.size(); j++) {
                         res.strVec[n]=params[1].strVec[j];
                         n++;
                     }
@@ -2487,7 +2479,7 @@ namespace JKMathParser_DefaultLib {
                 res.setBoolVec(items*params[1].boolVec.size());
                 int n=0;
                 for (int i=0; i<items; i++) {
-                    for (int j=0; j<params[1].boolVec.size(); j++) {
+                    for (size_t j=0; j<params[1].boolVec.size(); j++) {
                         res.boolVec[n]=params[1].boolVec[j];
                         n++;
                     }
@@ -2607,11 +2599,11 @@ namespace JKMathParser_DefaultLib {
             return res;
         }
         if (params[0].type==jkmpDouble) return jkmpResult(params[0].num);
-        if (params[0].type==jkmpDoubleVector && params[0].length()>0) return jkmpResult(params[0].numVec.back());
+        if (params[0].type==jkmpDoubleVector && params[0].size()>0) return jkmpResult(params[0].numVec.back());
         if (params[0].type==jkmpBool) return jkmpResult(params[0].boolean);
-        if (params[0].type==jkmpBoolVector && params[0].length()>0) return jkmpResult(params[0].boolVec.back());
-        if (params[0].type==jkmpString) return jkmpResult(params[0].str.right(1));
-        if (params[0].type==jkmpStringVector && params[0].length()>0) return jkmpResult(params[0].strVec.back());
+        if (params[0].type==jkmpBoolVector && params[0].size()>0) return jkmpResult(params[0].boolVec.back());
+        if (params[0].type==jkmpString) return jkmpResult(params[0].str.back());
+        if (params[0].type==jkmpStringVector && params[0].size()>0) return jkmpResult(params[0].strVec.back());
 
         p->jkmpError("last(x): x had no entries or unrecognized type");
         return res;
@@ -2626,11 +2618,11 @@ namespace JKMathParser_DefaultLib {
             return res;
         }
         if (params[0].type==jkmpDouble) return jkmpResult(params[0].num);
-        if (params[0].type==jkmpDoubleVector && params[0].length()>0) return jkmpResult(params[0].numVec.front());
+        if (params[0].type==jkmpDoubleVector && params[0].size()>0) return jkmpResult(params[0].numVec.front());
         if (params[0].type==jkmpBool) return jkmpResult(params[0].boolean);
-        if (params[0].type==jkmpBoolVector && params[0].length()>0) return jkmpResult(params[0].boolVec.front());
-        if (params[0].type==jkmpString) return jkmpResult(params[0].str.left(1));
-        if (params[0].type==jkmpStringVector && params[0].length()>0) return jkmpResult(params[0].strVec.front());
+        if (params[0].type==jkmpBoolVector && params[0].size()>0) return jkmpResult(params[0].boolVec.front());
+        if (params[0].type==jkmpString) return jkmpResult(params[0].str.front());
+        if (params[0].type==jkmpStringVector && params[0].size()>0) return jkmpResult(params[0].strVec.front());
 
         p->jkmpError("first(x): x had no entries or unrecognized type");
         return res;
@@ -2652,8 +2644,8 @@ namespace JKMathParser_DefaultLib {
             return res;
         } else if (idxb.size()>0) {
             isNumber=false;
-            if (idxb.size()!=params[0].length()) {
-                p->jkmpError(JKMP::_("item(x, boolidx) parameter boolidx has to be a vector of booleans with the same length as vector x [length(x)=%2, length(boolidx)=%1]").arg(idxb.size()).arg(params[0].length()));
+            if (idxb.size()!=params[0].size()) {
+                p->jkmpError(JKMP::_("item(x, boolidx) parameter boolidx has to be a vector of booleans with the same length as vector x [length(x)=%2, length(boolidx)=%1]").arg(idxb.size()).arg(params[0].size()));
                 return res;
             }
         }
@@ -2662,7 +2654,7 @@ namespace JKMathParser_DefaultLib {
             if (params[0].type==jkmpBool && idx.contains(0)) return jkmpResult(params[0].boolean);
             if (params[0].type==jkmpString) {
                 JKMP::string r;
-                for (int i=0; i<idx.size(); i++) {
+                for (size_t i=0; i<idx.size(); i++) {
                     if (i>=0 && i<params[0].str.size()) {
                         r+=params[0].str[idx[i]];
                     } else {
@@ -2674,7 +2666,7 @@ namespace JKMathParser_DefaultLib {
             }
             if (params[0].type==jkmpStringVector) {
                 JKMP::stringVector r;
-                for (int i=0; i<idx.size(); i++) {
+                for (size_t i=0; i<idx.size(); i++) {
                     if (i>=0 && i<params[0].strVec.size()) {
                         r<<params[0].strVec[idx[i]];
                     } else {
@@ -2687,7 +2679,7 @@ namespace JKMathParser_DefaultLib {
             }
             if (params[0].type==jkmpBoolVector) {
                 JKMP::vector<bool> r;
-                for (int i=0; i<idx.size(); i++) {
+                for (size_t i=0; i<idx.size(); i++) {
                     if (i>=0 && i<params[0].boolVec.size()) {
                         r<<params[0].boolVec[idx[i]];
                     } else {
@@ -2700,7 +2692,7 @@ namespace JKMathParser_DefaultLib {
             }
             if (params[0].type==jkmpDoubleVector) {
                 JKMP::vector<double> r;
-                for (int i=0; i<idx.size(); i++) {
+                for (size_t i=0; i<idx.size(); i++) {
                     if (i>=0 && i<params[0].numVec.size()) {
                         r<<params[0].numVec[idx[i]];
                     } else {
@@ -2715,7 +2707,7 @@ namespace JKMathParser_DefaultLib {
         } else {
             if (params[0].type==jkmpString) {
                 JKMP::string r;
-                for (int i=0; i<idxb.size(); i++) {
+                for (size_t i=0; i<idxb.size(); i++) {
                     if (idxb[i]) {
                         r+=params[0].str[i];
                     }
@@ -2724,7 +2716,7 @@ namespace JKMathParser_DefaultLib {
             }
             if (params[0].type==jkmpStringVector) {
                 JKMP::stringVector r;
-                for (int i=0; i<idxb.size(); i++) {
+                for (size_t i=0; i<idxb.size(); i++) {
                     if (idxb[i]) {
                         r<<params[0].strVec[i];
                     }
@@ -2734,7 +2726,7 @@ namespace JKMathParser_DefaultLib {
             }
             if (params[0].type==jkmpBoolVector) {
                 JKMP::vector<bool> r;
-                for (int i=0; i<idxb.size(); i++) {
+                for (size_t i=0; i<idxb.size(); i++) {
                     if (idxb[i]) {
                         r<<params[0].boolVec[i];
                     }
@@ -2744,7 +2736,7 @@ namespace JKMathParser_DefaultLib {
             }
             if (params[0].type==jkmpDoubleVector) {
                 JKMP::vector<double> r;
-                for (int i=0; i<idxb.size(); i++) {
+                for (size_t i=0; i<idxb.size(); i++) {
                     if (idxb[i]) {
                         r<<params[0].numVec[i];
                     }
@@ -2771,7 +2763,7 @@ namespace JKMathParser_DefaultLib {
         JKMP::vector<bool> idxb=params[1].asBoolVector();
         if (idx.size()<=0 && idxb.size()>0) {
             isNumber=false;
-            if (idxb.size()!=params[0].length()) {
+            if (idxb.size()!=params[0].size()) {
                 idxb.clear();
                 idx.clear();
                 isNumber=true;
@@ -2779,7 +2771,7 @@ namespace JKMathParser_DefaultLib {
         }
         if (!isNumber) {
             idx.clear();
-            for (int i=0; i<idxb.size(); i++) {
+            for (size_t i=0; i<idxb.size(); i++) {
                 if (idxb[i]) idx<<i;
             }
         }
@@ -2790,7 +2782,7 @@ namespace JKMathParser_DefaultLib {
 
         if (params[0].type==jkmpStringVector) {
             JKMP::stringVector r;
-            for (int i=0; i<idx.size(); i++) {
+            for (size_t i=0; i<idx.size(); i++) {
                 if (i>=0 && i<params[0].strVec.size()) {
                     r<<params[0].strVec[idx[i]];
                 } else {
@@ -2803,7 +2795,7 @@ namespace JKMathParser_DefaultLib {
         }
         if (params[0].type==jkmpBoolVector) {
             JKMP::vector<bool> r;
-            for (int i=0; i<idx.size(); i++) {
+            for (size_t i=0; i<idx.size(); i++) {
                 if (i>=0 && i<params[0].boolVec.size()) {
                     r<<params[0].boolVec[idx[i]];
                 } else {
@@ -2816,7 +2808,7 @@ namespace JKMathParser_DefaultLib {
         }
         if (params[0].type==jkmpDoubleVector) {
             JKMP::vector<double> r;
-            for (int i=0; i<idx.size(); i++) {
+            for (size_t i=0; i<idx.size(); i++) {
                 if (i>=0 && i<params[0].numVec.size()) {
                     r<<params[0].numVec[idx[i]];
                 } else {
@@ -2845,7 +2837,7 @@ namespace JKMathParser_DefaultLib {
             const JKMP::vector<double>& iv=params[0].numVec;
             int wid=params[1].toInteger();
             res.setDoubleVec(JKMP::vector<double>());
-            for (int i=0; i<iv.size(); i+=wid) {
+            for (size_t i=0; i<iv.size(); i+=wid) {
                 double s=0;
                 if (i+wid<iv.size()) {
                     for (int j=0; j<wid; j++) {
@@ -2866,70 +2858,72 @@ namespace JKMathParser_DefaultLib {
 
 
 
-    void fRegExpCapture(jkmpResult& r, const jkmpResult *params, unsigned int n, JKMathParser *p, bool minimal, Qt::CaseSensitivity casesens)
+    void fRegExpCapture(jkmpResult& r, const jkmpResult *params, unsigned int n, JKMathParser *p, bool minimal, bool casesens)
     {
         r.setInvalid();
-        if (n<2 || n>4) {\
-            p->jkmpError(JKMP::_("regexpcap(regexp, strings, cap_id=1, default_string=\"\") needs 2 or 4 arguments"));\
-            r.setInvalid();\
-            return; \
-        }\
-        if(params[1].type==jkmpStringVector || params[1].type==jkmpString) {\
-            if(params[0].type==jkmpString) {\
+        if (n<2 || n>4) {
+            p->jkmpError(JKMP::_("regexpcap(regexp, strings, cap_id=1, default_string=\"\") needs 2 or 4 arguments"));
+            r.setInvalid();
+            return;
+        }
+        if(params[1].type==jkmpStringVector || params[1].type==jkmpString) {
+            if(params[0].type==jkmpString) {
                 int capid=1;
                 JKMP::string defaultStr="";
                 if (n>2) {
-                    if(params[2].type==jkmpDouble && params[2].toInteger()>=0) {\
+                    if(params[2].type==jkmpDouble && params[2].toInteger()>=0) {
                         capid=params[2].toInteger();
                     } else {
-                        p->jkmpError(JKMP::_("regexpcap(regexp, strings, cap_id, default_string) argument cap_id has to be a number >=0"));\
-                        r.setInvalid();\
+                        p->jkmpError(JKMP::_("regexpcap(regexp, strings, cap_id, default_string) argument cap_id has to be a number >=0"));
+                        r.setInvalid();
                         return;
                     }
                 }
                 if (n>3) {
-                    if(params[3].type==jkmpString) {\
+                    if(params[3].type==jkmpString) {
                         defaultStr=params[3].str;
                     } else {
                         p->jkmpError(JKMP::_("regexpcap(regexp, strings, cap_id, default_string) argument default_string has to be a string"));\
-                        r.setInvalid();\
+                        r.setInvalid();
                         return;
                     }
                 }
-                QRegExp rx(params[0].str);
-                rx.setMinimal(minimal);
-                rx.setCaseSensitivity(casesens);
+                std::regex::flag_type flags=std::regex::ECMAScript;
+                if (!casesens) flags=flags|std::regex::icase;
+                std::regex rx(params[0].str, flags);
+                std::smatch sm;
+
                 if (params[1].type==jkmpStringVector) {
                     r.setStringVec(params[1].strVec);
-                    for (int i=0; i<r.strVec.size(); i++) {
-                        if (rx.indexIn(r.strVec[i])<0) {
+                    for (size_t i=0; i<r.strVec.size(); i++) {
+                        if (!std::regex_match(r.strVec[i],sm,rx)) {
                             r.strVec[i]=defaultStr;
                         } else {
-                            r.strVec[i]=rx.cap(capid);
+                            r.strVec[i]=sm[capid];
                         }
                     }
                 } else if (params[1].type==jkmpString) {
                     r.setString(params[1].str);
-                    if (rx.indexIn(r.str)<0) {
+                    if (! std::regex_match (params[1].str,sm,rx)) {
                         r.str=defaultStr;
                     } else {
-                        r.str=rx.cap(capid);
+                        r.str=sm[capid];
                     }
                 }
             } else {
-                p->jkmpError(JKMP::_("regexpcap(regexp, strings, cap_id=1, default_string=\"\") argument regexp has to be a string"));\
-                r.setInvalid();\
+                p->jkmpError(JKMP::_("regexpcap(regexp, strings, cap_id=1, default_string=\"\") argument regexp has to be a string"));
+                r.setInvalid();
                 return;
             }
-        } else {\
-            p->jkmpError(JKMP::_("regexpcap(regexp, strings, cap_id, default_string=\"\") argument strings has to be a vector of strings and a string"));\
-            r.setInvalid();\
+        } else {
+            p->jkmpError(JKMP::_("regexpcap(regexp, strings, cap_id, default_string=\"\") argument strings has to be a vector of strings and a string"));
+            r.setInvalid();
             return;
-        }\
-        return; \
+        }
+        return;
     }
 
-    void fRegExpContains(jkmpResult& r, const jkmpResult *params, unsigned int n, JKMathParser *p, bool minimal, Qt::CaseSensitivity casesens)
+    void fRegExpContains(jkmpResult& r, const jkmpResult *params, unsigned int n, JKMathParser *p, bool minimal, bool casesens)
     {
         if (n!=2) {\
             p->jkmpError(JKMP::_("regexpcontains(regexp, strings) needs 2 arguments"));\
@@ -2938,17 +2932,18 @@ namespace JKMathParser_DefaultLib {
         }\
         if(params[1].type==jkmpStringVector || params[1].type==jkmpString) {\
             if(params[0].type==jkmpString) {\
-                QRegExp rx(params[0].str);
-                rx.setMinimal(minimal);
-                rx.setCaseSensitivity(casesens);
+                std::regex::flag_type flags=std::regex::ECMAScript;
+                if (!casesens) flags=flags|std::regex::icase;
+                std::regex rx(params[0].str, flags);
+                std::smatch sm;
                 if (params[1].type==jkmpStringVector) {
                     JKMP::vector<bool> bv;
-                    for (int i=0; i<params[1].strVec.size(); i++) {
-                        bv.push_back(rx.indexIn(params[1].strVec[i])>=0);
+                    for (size_t i=0; i<params[1].strVec.size(); i++) {
+                        bv.push_back(std::regex_search(params[1].strVec[i],sm,rx));
                     }
                     r.setBoolVec(bv);
                 } else if (params[1].type==jkmpString) {
-                    r.setBoolean(rx.indexIn(params[1].str)>=0);
+                    r.setBoolean(std::regex_search(params[1].str,sm,rx)>=0);
                 }
             } else {
                 p->jkmpError(JKMP::_("regexpcontains(regexp, strings) argument regexp has to be a string"));\
@@ -2963,7 +2958,7 @@ namespace JKMathParser_DefaultLib {
         return; \
     }
 
-    void fRegExpIndexIn(jkmpResult& r, const jkmpResult *params, unsigned int n, JKMathParser *p, bool minimal, Qt::CaseSensitivity casesens)
+    void fRegExpIndexIn(jkmpResult& r, const jkmpResult *params, unsigned int n, JKMathParser *p, bool minimal, bool casesens)
     {
         if (n!=2) {\
             p->jkmpError(JKMP::_("regexpindexin(regexp, strings) needs 2 arguments"));\
@@ -2972,17 +2967,26 @@ namespace JKMathParser_DefaultLib {
         }\
         if(params[1].type==jkmpStringVector || params[1].type==jkmpString) {\
             if(params[0].type==jkmpString) {\
-                QRegExp rx(params[0].str);
-                rx.setMinimal(minimal);
-                rx.setCaseSensitivity(casesens);
+                std::regex::flag_type flags=std::regex::ECMAScript;
+                if (!casesens) flags=flags|std::regex::icase;
+                std::regex rx(params[0].str, flags);
+                std::smatch sm;
                 if (params[1].type==jkmpStringVector) {
                     JKMP::vector<double> bv;
-                    for (int i=0; i<params[1].strVec.size(); i++) {
-                        bv.push_back(rx.indexIn(params[1].strVec[i]));
+                    for (size_t i=0; i<params[1].strVec.size(); i++) {
+                        if (std::regex_search(params[1].strVec[i],sm,rx)) {
+                            bv.push_back(sm.position(0));
+                        } else {
+                            bv.push_back(-1);
+                        }
                     }
                     r.setDoubleVec(bv);
                 } else if (params[1].type==jkmpString) {
-                    r.setDouble(rx.indexIn(params[1].str));
+                    if (std::regex_search(params[1].str,sm,rx)) {
+                        r.setDouble(sm.position(0));
+                    } else {
+                        r.setDouble(-1);
+                    }
                 }
             } else {
                 p->jkmpError(JKMP::_("regexpindexin(regexp, strings) argument regexp has to be a string"));\
@@ -3003,14 +3007,14 @@ namespace JKMathParser_DefaultLib {
 
         if (n==1) {
             if (params[0].type==jkmpDoubleVector) {
-                res.setDouble(qfstatisticsTrapz(params[0].numVec));
+                res.setDouble(statisticsTrapz(params[0].numVec));
             } else {
                 p->jkmpError("trapz(Y) needs 1 vector of numbers");
             }
 
         } else if (n==2) {
             if (params[0].type==jkmpDoubleVector && params[1].type==jkmpDoubleVector) {
-                res.setDouble(qfstatisticsTrapzXY(params[0].numVec, params[1].numVec));
+                res.setDouble(statisticsTrapzXY(params[0].numVec, params[1].numVec));
             } else {
                 p->jkmpError("trapz(X,Y) needs 2 vectors of numbers");
             }
@@ -3022,7 +3026,7 @@ namespace JKMathParser_DefaultLib {
 
 
 
-
+/*
     void fDateNum(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p) {
         JKMP::string iname="datenum";
         r.setInvalid();
@@ -3446,7 +3450,7 @@ namespace JKMathParser_DefaultLib {
             return;
         }
         return;
-    }
+    }*/
 
 
     void fVarname(jkmpResult& r,  JKMathParser::jkmpNode** nodes, unsigned int n, JKMathParser* p) {
@@ -3479,15 +3483,15 @@ namespace JKMathParser_DefaultLib {
         r.setInvalid();
         if (n>0) r.set(params[0]);
         if (n==3 && params[0].type==jkmpDoubleVector && params[1].type==jkmpDouble && params[2].type==jkmpDouble) {
-            for (int i=0; i<r.numVec.size(); i++) {
+            for (size_t i=0; i<r.numVec.size(); i++) {
                 if (r.numVec[i]==params[1].num) r.numVec[i]=params[2].num;
             }
         } else if (n==3 && params[0].type==jkmpStringVector && params[1].type==jkmpString && params[2].type==jkmpString) {
-            for (int i=0; i<r.strVec.size(); i++) {
+            for (size_t i=0; i<r.strVec.size(); i++) {
                 if (r.strVec[i]==params[1].str) r.strVec[i]=params[2].str;
             }
         } else if (n==3 && params[0].type==jkmpBoolVector && params[1].type==jkmpBool && params[2].type==jkmpBool) {
-            for (int i=0; i<r.boolVec.size(); i++) {
+            for (size_t i=0; i<r.boolVec.size(); i++) {
                 if (r.boolVec[i]==params[1].boolean) r.boolVec[i]=params[2].boolean;
             }
         } else if (n==3 && params[0].type==jkmpString && params[1].type==jkmpString && params[2].type==jkmpString) {
@@ -3511,7 +3515,7 @@ namespace JKMathParser_DefaultLib {
                     r.setInvalid();
                     return;
                 }
-                for (int i=0; i<r.numVec.size(); i++) {
+                for (size_t i=0; i<r.numVec.size(); i++) {
                     if (r.numVec[i]==params[j].num) r.numVec[i]=params[j+1].num;
                 }
             }
@@ -3522,23 +3526,23 @@ namespace JKMathParser_DefaultLib {
                     r.setInvalid();
                     return;
                 }
-                for (int i=0; i<r.strVec.size(); i++) {
+                for (size_t i=0; i<r.strVec.size(); i++) {
                     if (r.strVec[i]==params[j].str) r.strVec[i]=params[j+1].str;
                 }
             }
         } else if (n>=3 && n%2==1 && params[0].type==jkmpBoolVector && params[1].type==jkmpBool && params[2].type==jkmpBool) {
-            for (unsigned int j=1; j<n; j+=2) {
+            for (size_t j=1; j<n; j+=2) {
                 if (params[j].type!=jkmpBool || params[j+1].type!=jkmpBool) {
                     p->jkmpError(errorm);
                     r.setInvalid();
                     return;
                 }
-                for (int i=0; i<r.boolVec.size(); i++) {
+                for (size_t i=0; i<r.boolVec.size(); i++) {
                     if (r.boolVec[i]==params[j].boolean) r.boolVec[i]=params[j+1].boolean;
                 }
             }
         } else if (n>=3 && n%2==1 && params[0].type==jkmpString && params[1].type==jkmpString && params[2].type==jkmpString) {
-            for (unsigned int j=1; j<n; j+=2) {
+            for (size_t j=1; j<n; j+=2) {
                 if (params[j].type!=jkmpString || params[j+1].type!=jkmpString) {
                     p->jkmpError(errorm);
                     r.setInvalid();
@@ -3888,17 +3892,17 @@ namespace JKMathParser_DefaultLib {
             int ts=params[1].toInteger();
             res=params[0];
             if (res.numVec.size()>ts) {
-                while (res.numVec.size()>ts) res.numVec.erase(0);
+                while (res.numVec.size()>ts) res.numVec.pop_front();
             } else if (res.numVec.size()<ts) {
-                while (res.numVec.size()<ts) res.numVec.prepend(params[2].num);
+                while (res.numVec.size()<ts) res.numVec.push_front(params[2].num);
             }
         } else if (n==3 && (params[0].type==jkmpStringVector && params[1].isInteger() && params[2].type==jkmpString)) {
             int ts=params[1].toInteger();
             res=params[0];
             if (res.strVec.size()>ts) {
-                while (res.strVec.size()>ts) res.strVec.removeFirst();
+                while (res.strVec.size()>ts) res.strVec.pop_front();
             } else if (res.strVec.size()<ts) {
-                while (res.strVec.size()<ts) res.strVec.prepend(params[2].str);
+                while (res.strVec.size()<ts) res.strVec.push_front(params[2].str);
             }
         } else if (n==3 && (params[0].type==jkmpString && params[1].isInteger() && params[2].type==jkmpString && params[2].str.size()==1)) {
             int ts=params[1].toInteger();
@@ -3912,9 +3916,9 @@ namespace JKMathParser_DefaultLib {
             int ts=params[1].toInteger();
             res=params[0];
             if (res.boolVec.size()>ts) {
-                while (res.boolVec.size()>ts) res.boolVec.erase(0);
+                while (res.boolVec.size()>ts) res.boolVec.pop_front();
             } else if (res.boolVec.size()<ts) {
-                while (res.boolVec.size()<ts) res.boolVec.prepend(params[2].boolean);
+                while (res.boolVec.size()<ts) res.boolVec.push_front(params[2].boolean);
             }
         } else {
             res.setInvalid();
@@ -3934,11 +3938,11 @@ namespace JKMathParser_DefaultLib {
         if ((n==1 || n==2 || n==3) && params[0].type==jkmpDoubleVector) {
             bool norm=false;
             if (n==2 && params[1].isUInt())  {
-                bins=qMax((uint32_t)2,params[1].toUInt());
+                bins=std::max((uint32_t)2,params[1].toUInt());
             } else if (n==2 && params[1].type==jkmpBool)  {
                 norm=params[1].boolean;
             } else if (n==3 && params[1].isUInt() && params[2].type==jkmpBool)  {
-                bins=qMax((uint32_t)2,params[1].toUInt());
+                bins=std::max((uint32_t)2,params[1].toUInt());
                 norm=params[2].boolean;
             } else {
                 res.setInvalid();
@@ -3948,7 +3952,7 @@ namespace JKMathParser_DefaultLib {
             JKMP::vector<double> temp;
             temp.resize(bins);
             res.setDoubleVec(bins);
-            statisticsHistogram(params[0].numVec.constData(), params[0].numVec.size(), temp.data(), res.numVec.data(), bins, norm);
+            statisticsHistogram(params[0].numVec.data(), params[0].numVec.size(), temp.data(), res.numVec.data(), bins, norm);
         } else {
             res.setInvalid();
             p->jkmpError(JKMP::_("%1(data[,bins][,normalize]) needs at least one number vector argument").arg(iname));
@@ -3963,11 +3967,11 @@ namespace JKMathParser_DefaultLib {
         if ((n==1 || n==2 || n==3) && params[0].type==jkmpDoubleVector) {
             bool norm=false;
             if (n==2 && params[1].isUInt())  {
-                bins=qMax((uint32_t)2,params[1].toUInt());
+                bins=std::max((uint32_t)2,params[1].toUInt());
             } else if (n==2 && params[1].type==jkmpBool)  {
                 norm=params[1].boolean;
             } else if (n==3 && params[1].isUInt() && params[2].type==jkmpBool)  {
-                bins=qMax((uint32_t)2,params[1].toUInt());
+                bins=std::max((uint32_t)2,params[1].toUInt());
                 norm=params[2].boolean;
             } else {
                 res.setInvalid();
@@ -3977,7 +3981,7 @@ namespace JKMathParser_DefaultLib {
             JKMP::vector<double> temp;
             temp.resize(bins);
             res.setDoubleVec(bins);
-            statisticsHistogram(params[0].numVec.constData(), params[0].numVec.size(), res.numVec.data(), temp.data(), bins, norm);
+            statisticsHistogram(params[0].numVec.data(), params[0].numVec.size(), res.numVec.data(), temp.data(), bins, norm);
         } else {
             res.setInvalid();
             p->jkmpError(JKMP::_("%1(data[,bins][,normalize]) needs at least one number vector argument").arg(iname));
@@ -4004,11 +4008,11 @@ namespace JKMathParser_DefaultLib {
             double rmin=params[1].num;
             double rmax=params[2].num;
             if (n==4 && params[3].isUInt())  {
-                bins=qMax((uint32_t)2,params[3].toUInt());
+                bins=std::max((uint32_t)2,params[3].toUInt());
             } else if (n==4 && params[3].type==jkmpBool)  {
                 norm=params[3].boolean;
             } else if (n==5 && params[3].isUInt() && params[4].type==jkmpBool)  {
-                bins=qMax((uint32_t)2,params[3].toUInt());
+                bins=std::max((uint32_t)2,params[3].toUInt());
                 norm=params[4].boolean;
             } else {
                 res.setInvalid();
@@ -4018,7 +4022,7 @@ namespace JKMathParser_DefaultLib {
             JKMP::vector<double> temp;
             temp.resize(bins);
             res.setDoubleVec(bins);
-            statisticsHistogramRanged(params[0].numVec.constData(), params[0].numVec.size(), rmin, rmax, temp.data(), res.numVec.data(), bins, norm);
+            statisticsHistogramRanged(params[0].numVec.data(), params[0].numVec.size(), rmin, rmax, temp.data(), res.numVec.data(), bins, norm);
         } else {
             res.setInvalid();
             p->jkmpError(JKMP::_("%1(data,min,max[,bins][,normalize]) needs at least one number vector argument").arg(iname));
@@ -4037,11 +4041,11 @@ namespace JKMathParser_DefaultLib {
             double rmin=params[paramoffset].num;
             double rmax=params[paramoffset+1].num;
             if (n==paramoffset+3 && params[paramoffset+2].isUInt())  {
-                bins=qMax((uint32_t)2,params[paramoffset+2].toUInt());
+                bins=std::max((uint32_t)2,params[paramoffset+2].toUInt());
             } else if (n==paramoffset+3 && params[paramoffset+2].type==jkmpBool)  {
                 norm=params[paramoffset+2].boolean;
             } else if (n==paramoffset+4 && params[paramoffset+2].isUInt() && params[paramoffset+3].type==jkmpBool)  {
-                bins=qMax((uint32_t)2,params[paramoffset+2].toUInt());
+                bins=std::max((uint32_t)2,params[paramoffset+2].toUInt());
                 norm=params[paramoffset+3].boolean;
             } else {
                 res.setInvalid();
@@ -4053,7 +4057,7 @@ namespace JKMathParser_DefaultLib {
             res.setDoubleVec(bins);
             JKMP::vector<double> dummy;
             dummy<<0<<1;
-            statisticsHistogramRanged(dummy.constData(), dummy.size(), rmin, rmax, res.numVec.data(), temp.data(), bins, norm);
+            statisticsHistogramRanged(dummy.data(), dummy.size(), rmin, rmax, res.numVec.data(), temp.data(), bins, norm);
         } else {
             res.setInvalid();
             p->jkmpError(JKMP::_("%1([data,]min,max[,bins][,normalize]) needs at least two number arguments").arg(iname));
@@ -4091,7 +4095,7 @@ namespace JKMathParser_DefaultLib {
             return;
 
         }
-        if (params[0].length()!= params[1].length()) {
+        if (params[0].size()!= params[1].size()) {
             p->jkmpError("polyfit(X,Y,n) arguments X and Y have to have the same length");
             r.setInvalid();
             return;
@@ -4118,7 +4122,7 @@ namespace JKMathParser_DefaultLib {
         r.numVec.clear();
         r.numVec.resize(np+1);
         for (int i=0; i<np+1; i++) r.numVec[i]=0.0;
-        statisticsPolyFit(X.data(), Y.data(), qMin(X.size(), Y.size()), np, r.numVec.data());
+        statisticsPolyFit(X.data(), Y.data(), std::min(X.size(), Y.size()), np, r.numVec.data());
 
     }
 
@@ -4137,7 +4141,7 @@ namespace JKMathParser_DefaultLib {
             return;
 
         }
-        if (params[0].length()!= params[1].length()) {
+        if (params[0].size()!= params[1].size()) {
             p->jkmpError("regression(X,Y) arguments X and Y have to have the same length");
             r.setInvalid();
             return;
@@ -4169,7 +4173,7 @@ namespace JKMathParser_DefaultLib {
         }
         JKMP::vector<double> X=params[0].asVector();
         JKMP::vector<double> Y=params[1].asVector();
-        statisticsLinearRegression(X.data(), Y.data(), qMin(X.size(), Y.size()), a, b, fixA, fixB);
+        statisticsLinearRegression(X.data(), Y.data(), std::min(X.size(), Y.size()), a, b, fixA, fixB);
 
         r.numVec.clear();
         r.numVec<<a;
@@ -4191,7 +4195,7 @@ namespace JKMathParser_DefaultLib {
             return;
 
         }
-        if (params[0].length()!= params[1].length() || params[0].length()!= params[2].length() || params[2].length()!= params[2].length()) {
+        if (params[0].size()!= params[1].size() || params[0].size()!= params[2].size() || params[2].size()!= params[2].size()) {
             p->jkmpError("weighted_regression(X,Y,W) arguments X, Y and W have to have the same length");
             r.setInvalid();
             return;
@@ -4224,7 +4228,7 @@ namespace JKMathParser_DefaultLib {
         JKMP::vector<double> X=params[0].asVector();
         JKMP::vector<double> Y=params[1].asVector();
         JKMP::vector<double> W=params[2].asVector();
-        statisticsLinearWeightedRegression(X.data(), Y.data(), W.data(), qMin(X.size(), Y.size()), a, b, fixA, fixB);
+        statisticsLinearWeightedRegression(X.data(), Y.data(), W.data(), std::min(X.size(), Y.size()), a, b, fixA, fixB);
 
         r.numVec.clear();
         r.numVec<<a;
@@ -4246,7 +4250,7 @@ namespace JKMathParser_DefaultLib {
             return;
 
         }
-        if (params[0].length()!= params[1].length()) {
+        if (params[0].size()!= params[1].size()) {
             p->jkmpError("irls(X,Y) arguments X and Y have to have the same length");
             r.setInvalid();
             return;
@@ -4294,7 +4298,7 @@ namespace JKMathParser_DefaultLib {
         }
         JKMP::vector<double> X=params[0].asVector();
         JKMP::vector<double> Y=params[1].asVector();
-        statisticsIterativelyReweightedLeastSquaresRegression(X.data(), Y.data(), qMin(X.size(), Y.size()), a, b, Lp, iterations, fixA, fixB);
+        statisticsIterativelyReweightedLeastSquaresRegression(X.data(), Y.data(), std::min(X.size(), Y.size()), a, b, Lp, iterations, fixA, fixB);
 
         r.numVec.clear();
         r.numVec<<a;
@@ -4337,7 +4341,7 @@ namespace JKMathParser_DefaultLib {
             return;
 
         }
-        if (params[0].length()!=2 || params[1].length()!=2) {
+        if (params[0].size()!=2 || params[1].size()!=2) {
             p->jkmpError("erroradd(X,Y) arguments X and Y have to have length 2");
             r.setInvalid();
             return;
@@ -4369,7 +4373,7 @@ namespace JKMathParser_DefaultLib {
             return;
 
         }
-        if (params[0].length()!=2 || params[1].length()!=2) {
+        if (params[0].size()!=2 || params[1].size()!=2) {
             p->jkmpError("errorsub(X,Y) arguments X and Y have to have length 2");
             r.setInvalid();
             return;
@@ -4404,7 +4408,7 @@ namespace JKMathParser_DefaultLib {
             return;
 
         }
-        if (params[0].length()!=2 || params[1].length()!=2) {
+        if (params[0].size()!=2 || params[1].size()!=2) {
             p->jkmpError("errormul(X,Y) arguments X and Y have to have length 2");
             r.setInvalid();
             return;
@@ -4418,7 +4422,7 @@ namespace JKMathParser_DefaultLib {
 
         r.numVec.clear();
         r.numVec<<X*Y;
-        r.numVec<<sqrt(qfSqr(Y*Xe)+qfSqr(X*Ye));
+        r.numVec<<sqrt(JKMP::sqr(Y*Xe)+JKMP::sqr(X*Ye));
 
     }
 
@@ -4436,7 +4440,7 @@ namespace JKMathParser_DefaultLib {
             return;
 
         }
-        if (params[0].length()!=2 || params[1].length()!=2) {
+        if (params[0].size()!=2 || params[1].size()!=2) {
             p->jkmpError("errordiv(X,Y) arguments X and Y have to have length 2");
             r.setInvalid();
             return;
@@ -4450,7 +4454,7 @@ namespace JKMathParser_DefaultLib {
 
         r.numVec.clear();
         r.numVec<<X/Y;
-        r.numVec<<sqrt(qfSqr(Xe/Y)+qfSqr(X*Ye/Y/Y));
+        r.numVec<<sqrt(JKMP::sqr(Xe/Y)+JKMP::sqr(X*Ye/Y/Y));
 
     }
     void fErrorPow(jkmpResult &r, const jkmpResult* params, unsigned int  n, JKMathParser* p){
@@ -4465,7 +4469,7 @@ namespace JKMathParser_DefaultLib {
             r.setInvalid();
             return;
         }
-        if (params[0].length()!=2 || params[1].length()!=2) {
+        if (params[0].size()!=2 || params[1].size()!=2) {
             p->jkmpError("errorpow(X,Y) arguments X and Y have to have length 2");
             r.setInvalid();
             return;
@@ -4478,7 +4482,7 @@ namespace JKMathParser_DefaultLib {
 
         r.numVec.clear();
         r.numVec<<pow(X,Y);
-        r.numVec<<sqrt(qfSqr(Xe*Y*pow(X,Y-1.0))+qfSqr(Ye*pow(X,Y)*log(Y)));
+        r.numVec<<sqrt(JKMP::sqr(Xe*Y*pow(X,Y-1.0))+JKMP::sqr(Ye*pow(X,Y)*log(Y)));
     }
 
     void fStruct(jkmpResult &r, const jkmpResult *params, unsigned int n, JKMathParser *p)
@@ -4656,14 +4660,14 @@ namespace JKMathParser_DefaultLib {
             } else if (params[1].isUIntVector()) {
                 JKMP::vector<uint32_t> l=params[1].toUIntVector();
                 r.setList(l.size());
-                for (int i=0; i<l.size(); i++) {
+                for (size_t i=0; i<l.size(); i++) {
                     r.listData[i]=params[0].getListItem(l[i]);
                 }
             } else if (params[1].isBoolVector()) {
                 JKMP::vector<bool> l=params[1].boolVec;
                 r.setList(l.size());
                 if (l.size()==r.listData.size()) {
-                    for (int i=0; i<l.size(); i++) {
+                    for (size_t i=0; i<l.size(); i++) {
                         if (l[i]) r.listData[i]=params[0].getListItem(i);
                     }
                 } else {
@@ -4689,14 +4693,14 @@ namespace JKMathParser_DefaultLib {
             } else if (params[1].isUIntVector()) {
                 JKMP::vector<uint32_t> l=params[1].toUIntVector();
                 r.setList(l.size());
-                for (int i=0; i<l.size(); i++) {
+                for (size_t i=0; i<l.size(); i++) {
                     r.listData[i]=params[0].getListItem(l[i], params[2]);
                 }
             } else if (params[1].isBoolVector()) {
                 JKMP::vector<bool> l=params[1].boolVec;
                 r.setList(r.listData.size());
                 if (l.size()==r.listData.size()) {
-                    for (int i=0; i<l.size(); i++) {
+                    for (size_t i=0; i<l.size(); i++) {
                         if (l[i]) r.listData[i]=params[0].getListItem(i);
                         else r.listData[i]=params[2];
                     }
@@ -4720,17 +4724,17 @@ namespace JKMathParser_DefaultLib {
             r.setInvalid();
             if (params[0].type==jkmpDoubleVector) {
                 r.setList(params[0].numVec.size());
-                for (int i=0; i<params[0].numVec.size(); i++) {
+                for (size_t i=0; i<params[0].numVec.size(); i++) {
                     r.listData[i].setDouble(params[0].numVec[i]);
                 }
             } else if (params[0].type==jkmpStringVector) {
                 r.setList(params[0].strVec.size());
-                for (int i=0; i<params[0].strVec.size(); i++) {
+                for (size_t i=0; i<params[0].strVec.size(); i++) {
                     r.listData[i].setString(params[0].strVec[i]);
                 }
             } else if (params[0].type==jkmpBoolVector) {
                 r.setList(params[0].boolVec.size());
-                for (int i=0; i<params[0].boolVec.size(); i++) {
+                for (size_t i=0; i<params[0].boolVec.size(); i++) {
                     r.listData[i].setString(params[0].boolVec[i]);
                 }
             } else {
@@ -4807,7 +4811,7 @@ namespace JKMathParser_DefaultLib {
                 r.removeListItem(params[1].toUInt());
             } else if (params[1].isUIntVector()) {
                 JKMP::vector<uint32_t> l=params[1].toUIntVector();
-                qSort(l);
+                std::sort(l.begin(), l.end());
                 for (int i=l.size()-1; i>=0; i--) {
                     r.removeListItem(l[i]);
                 }
@@ -4837,7 +4841,7 @@ namespace JKMathParser_DefaultLib {
             r=params[0];
             int idx=params[1].toUInt();
             for (unsigned int i=2; i<n; i++) {
-                r.listData.insert(idx+i-2, params[i]);
+                r.listData.insert(r.listData.begin()+(idx+i-2), params[i]);
             }
         } else {
             if (n<3) p->jkmpError(JKMP::_("listinsert(list_in, index, items) requires one list and one integer/boolean-vector/integer-vector arguments, but only %1 arguments given").arg(n));
@@ -4855,11 +4859,11 @@ namespace JKMathParser_DefaultLib {
             return res;
         }
         if (params[0].type==jkmpDouble) return jkmpResult(params[0].num);
-        if (params[0].type==jkmpDoubleVector && params[0].length()>0) return jkmpResult(params[0].numVec.back());
+        if (params[0].type==jkmpDoubleVector && params[0].size()>0) return jkmpResult(params[0].numVec.back());
         if (params[0].type==jkmpBool) return jkmpResult(params[0].boolean);
-        if (params[0].type==jkmpBoolVector && params[0].length()>0) return jkmpResult(params[0].boolVec.back());
+        if (params[0].type==jkmpBoolVector && params[0].size()>0) return jkmpResult(params[0].boolVec.back());
         if (params[0].type==jkmpString) return jkmpResult(params[0].str);
-        if (params[0].type==jkmpStringVector && params[0].length()>0) return jkmpResult(params[0].strVec.back());
+        if (params[0].type==jkmpStringVector && params[0].size()>0) return jkmpResult(params[0].strVec.back());
 
         p->jkmpError("lastinvector(x): x had no entries or unrecognized type");
         return res;
@@ -4874,11 +4878,11 @@ namespace JKMathParser_DefaultLib {
             return res;
         }
         if (params[0].type==jkmpDouble) return jkmpResult(params[0].num);
-        if (params[0].type==jkmpDoubleVector && params[0].length()>0) return jkmpResult(params[0].numVec.front());
+        if (params[0].type==jkmpDoubleVector && params[0].size()>0) return jkmpResult(params[0].numVec.front());
         if (params[0].type==jkmpBool) return jkmpResult(params[0].boolean);
-        if (params[0].type==jkmpBoolVector && params[0].length()>0) return jkmpResult(params[0].boolVec.front());
+        if (params[0].type==jkmpBoolVector && params[0].size()>0) return jkmpResult(params[0].boolVec.front());
         if (params[0].type==jkmpString) return jkmpResult(params[0].str);
-        if (params[0].type==jkmpStringVector && params[0].length()>0) return jkmpResult(params[0].strVec.front());
+        if (params[0].type==jkmpStringVector && params[0].size()>0) return jkmpResult(params[0].strVec.front());
 
         p->jkmpError("firstinvector(x): x had no entries or unrecognized type");
         return res;

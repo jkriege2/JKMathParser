@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "jkmathparserbase.h"
+#include "jkmpbase.h"
 
 namespace JKMP {
     GeneralData GeneralDataDefault = NULL;

@@ -32,7 +32,7 @@
 #ifndef JKMATHPARSER_H
 #define JKMATHPARSER_H
 
-#include "jkmathparserlib_imexport.h"
+#include "jkmplib_imexport.h"
 
 #include <cmath>
 #include <vector>
@@ -40,9 +40,9 @@
 #include <string>
 #include <set>
 
-#include "jkmathparsertools.h"
-#include "jkmathparserbase.h"
-#include "jkmathparserstringtools.h"
+#include "jkmptools.h"
+#include "jkmpbase.h"
+#include "jkmpstringtools.h"
 
 #include "extlibs/MersenneTwister.h"
 
@@ -1633,8 +1633,8 @@ class JKMPLIB_EXPORT JKMathParser
 
 		/** \brief this stream is used to read in the program. An object is created and assigned
   		 * (and destroyed) by the parse()-function */
-        std::istream * program;
-        JKMP::string progStr;
+        std::istringstream * program;
+        std::string progStr;
 
         MTRand rng;
 
@@ -1921,10 +1921,10 @@ class JKMPLIB_EXPORT JKMathParser
         void addStandardFunctions();
 
         /** \brief  parses the given expression*/
-        jkmpNode* parse(JKMP::string prog);
+        jkmpNode* parse(std::string prog);
 
         /** \brief evaluate the given expression */
-        jkmpResult evaluate(JKMP::string prog);
+        jkmpResult evaluate(std::string prog);
 
         /** \brief  prints a list of all registered variables */
         inline JKMP::string printVariables(){

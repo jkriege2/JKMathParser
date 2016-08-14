@@ -26,8 +26,10 @@
 #include <float.h>
 #include <stdint.h>
 #include <limits>
+#include <cctype>
+#include <locale>
 #include <algorithm>
-#include "jkmathparserdefaultlib.h"
+#include "jkmpdefaultlib.h"
 
 
 
@@ -38,7 +40,7 @@ void JKMathParser::addStandardVariables(){
     }
 
 
-    for (int i=0; i<externalGlobalVariables.size(); i++) {
+    for (size_t i=0; i<externalGlobalVariables.size(); i++) {
         addVariable(externalGlobalVariables[i].first, externalGlobalVariables[i].second);
     }
 
@@ -51,13 +53,13 @@ void JKMathParser::addStandardFunctions(){
 
     addVariableString("version", JKMATHPARSER_VERSION);
 
-    for (int i=0; i<externalGlobalFunctions.size(); i++) {
+    for (size_t i=0; i<externalGlobalFunctions.size(); i++) {
         addFunction(externalGlobalFunctions[i].first, externalGlobalFunctions[i].second);
     }
-    for (int i=0; i<externalGlobalFunctionsRR.size(); i++) {
+    for (size_t i=0; i<externalGlobalFunctionsRR.size(); i++) {
         addFunction(externalGlobalFunctionsRR[i].first, externalGlobalFunctionsRR[i].second);
     }
-    for (int i=0; i<externalGlobalFunctionsFN.size(); i++) {
+    for (size_t i=0; i<externalGlobalFunctionsFN.size(); i++) {
         addFunction(externalGlobalFunctionsFN[i].first, externalGlobalFunctionsFN[i].second);
     }
 }
@@ -195,7 +197,9 @@ void JKMathParser::setGeneralData(const JKMP::string &id, const JKMP::GeneralDat
 
 JKMP::GeneralData JKMathParser::getGeneraldata(const JKMP::string &id, const JKMP::GeneralData &defaultData)
 {
-    return m_generalData.value(id, defaultData);
+    auto it=m_generalData.find(id);
+    if (it==m_generalData.end()) return defaultData;
+    else return it->second;
 }
 
 bool JKMathParser::hasErrorOccured() const
@@ -273,30 +277,23 @@ void JKMathParser::addGlobalVariable(const JKMP::string &name, bool value)
 char JKMathParser::peekStream(std::istream *stream)
 {
     if (!stream) return char(0);
-    qint64 p=stream->pos();
-    char c=char(0);
-    if (!stream->atEnd()) {
-        stream->operator>>(c);
-        stream->seek(p);
-    }
-    //qDebug()<<"peek "<<c;
-    return c;
+    return stream->peek();
 }
 
 void JKMathParser::putbackStream(std::istream *stream, char ch)
 {
-    if (ch!=0 && stream) stream->seek(stream->pos()-1);
+    if (ch!=0 && stream) stream->putback(ch);
 }
 
 bool JKMathParser::getFromStream(std::istream *stream, char &c)
 {
     if (!stream) return false;
     c=char(0);
-    if (stream->atEnd()) {
+    if (stream->eof()) {
         //qDebug()<<"read "<<c<<": false";
         return false;
     }
-    stream->operator>>(c);
+    c=stream->get();
     //qDebug()<<"read "<<c<<": true";
     return true;
 }
@@ -389,12 +386,12 @@ void JKMathParser::addFunction(const JKMP::string &name, JKMathParser::jkmpEvalu
 
 JKMathParser::jkmpTokenType JKMathParser::getToken(){
     char ch=0;
-    while(getFromStream(program, ch) && ch.isSpace()) {
+    while(getFromStream(program, ch) && std::isspace(ch)) {
 		;
 	}
 
 
-    switch (ch.toLatin1()) {
+    switch (ch) {
 		case 0:
 		case -1:
 			return CurrentToken=END;
@@ -509,11 +506,11 @@ JKMathParser::jkmpTokenType JKMathParser::getToken(){
 			return CurrentToken=NUMBER;
 		}
 		default:
-            if (ch.isLetter() || (ch=='_')) { // try to recognize NAME, LOGIC_TRUE, LOGIC_FALSE, DIFF_LBRACKET
+            if (std::isalpha(ch, std::locale("C")) || (ch=='_')) { // try to recognize NAME, LOGIC_TRUE, LOGIC_FALSE, DIFF_LBRACKET
 				StringValue=ch;
-                while (getFromStream(program, ch) && (ch.isDigit()||ch.isLetter() || (ch=='_'))) {
-                    if ((ch.isDigit()||ch.isLetter()) || (ch=='_')) {
-                        StringValue.push_back(ch);
+                while (getFromStream(program, ch) && (std::isdigit(ch, std::locale("C"))||std::isalpha(ch, std::locale("C")) || (ch=='_'))) {
+                    if ((std::isdigit(ch, std::locale("C"))||std::isalpha(ch, std::locale("C"))) || (ch=='_')) {
+                        StringValue<<ch;
                     }
 				}
 
@@ -547,7 +544,7 @@ JKMathParser::jkmpTokenType JKMathParser::getToken(){
 			}
 			// the parser has found an unknown token. an exception will be thrown
 			//std::cout<<StringValue<<",   "<<ch<<std::endl;
-            jkmpError(JKMP::string("get_next_token: unknown token currentCharacter='%1', currentString='%2'").arg(chartostr(ch)).arg(StringValue));
+            jkmpError(JKMP::string("get_next_token: unknown token currentCharacter='%1', currentString='%2'").arg(JKMP::chartostr(ch)).arg(StringValue));
             break;
 	}
     return END;
@@ -576,9 +573,9 @@ void JKMathParser::eatSinglelineComment()
 }
 
 
-JKMathParser::jkmpNode* JKMathParser::parse(JKMP::string prog){
+JKMathParser::jkmpNode* JKMathParser::parse(std::string prog){
     progStr=prog;
-    program=new std::istream(&progStr);
+    program=new std::istringstream(progStr);
     JKMathParser::jkmpNode* res=NULL;
     JKMathParser::jkmpNodeList* resList=new JKMathParser::jkmpNodeList(this);
 	while(true) {
@@ -604,7 +601,7 @@ JKMathParser::jkmpNode* JKMathParser::parse(JKMP::string prog){
     }
 }
 
-jkmpResult JKMathParser::evaluate(JKMP::string prog) {
+jkmpResult JKMathParser::evaluate(std::string prog) {
     JKMathParser::jkmpNode* res=parse(prog);
     jkmpResult r;
     res->evaluate(r);
@@ -916,7 +913,7 @@ JKMathParser::jkmpNode* JKMathParser::primary(bool get){
                             return NULL;
                         }
                         jkmpCasesNode* cn=new jkmpCasesNode(this, NULL);
-                        for (int i=0; i<params.size()-1; i=i+2) {
+                        for (size_t i=0; i<params.size()-1; i=i+2) {
                             cn->addCase(params[i], params[i+1]);
                         }
                         cn->setElse(params.back());
@@ -1004,7 +1001,7 @@ JKMathParser::jkmpNode* JKMathParser::primary(bool get){
                     } else if (CurrentToken==ASSIGN) { // function assignment
                         bool allParamsAreNames=true;
                         JKMP::stringVector pnames;
-                        for (int i=0; i<params.size(); i++) {
+                        for (size_t i=0; i<params.size(); i++) {
                             jkmpVariableNode* n=NULL;
                             if ((n=dynamic_cast<jkmpVariableNode*>(params[i]))) {
                                 pnames<<n->getName();
@@ -1200,7 +1197,7 @@ double JKMathParser::readDec()
 
     while (isNumber) {
       if (!isMantissa) {
-        switch(c.toLatin1()) {
+        switch(c) {
           case '0':
           case '1':
           case '2':
@@ -1233,7 +1230,7 @@ double JKMathParser::readDec()
         }
       }
       if (isMantissa) {
-        switch(c.toLatin1()) {
+        switch(c) {
           case '0':
           case '1':
           case '2':
@@ -1289,7 +1286,7 @@ double JKMathParser::readDec()
   }
 
     if (num.length()<=0) num="0";
-    current_double = QLocale::c().toDouble(num);
+    current_double = JKMP::stringtofloat(num);
     current_double=(current_double)*dfactor;
     return current_double;
 }
@@ -1309,7 +1306,7 @@ double JKMathParser::readHex() {
         else if (c=='+') { isNumber=getFromStream(program, c); i++; }
 
         while (isNumber) {
-            switch(c.toLatin1()) {
+            switch(c) {
                 case '0':
                 case '1':
                 case '2':
@@ -1335,7 +1332,7 @@ double JKMathParser::readHex() {
                     num+=c;
                     break;
                 default:
-                    if (c.isLetterOrNumber()) {
+                    if (std::isdigit(c, std::locale("C")) || std::isalpha(c, std::locale("C"))) {
                         jkmpError(JKMP::_("read_hex: found unexpected character '%1'").arg(JKMP::string(c)));
                         return 0;
                     }
@@ -1348,7 +1345,7 @@ double JKMathParser::readHex() {
     }
 
       if (num.length()<=0) num="0";
-      current_double=num.toInt(NULL, 16);
+      current_double=JKMP::hextoint(num);
       current_double=(current_double)*dfactor;
       return current_double;
 }
@@ -1368,7 +1365,7 @@ double JKMathParser::readOct() {
         else if (c=='+') { isNumber=getFromStream(program, c); i++; }
 
         while (isNumber) {
-            switch(c.toLatin1()) {
+            switch(c) {
                 case '0':
                 case '1':
                 case '2':
@@ -1396,7 +1393,7 @@ double JKMathParser::readOct() {
     }
 
       if (num.length()<=0) num="0";
-      current_double=num.toInt(NULL, 8);
+      current_double=JKMP::octtoint(num);
       current_double=(current_double)*dfactor;
       return current_double;
 }
@@ -1417,7 +1414,7 @@ double JKMathParser::readBin() {
       else if (c=='+') { isNumber=getFromStream(program, c); i++; }
 
       while (isNumber) {
-          switch(c.toLatin1()) {
+          switch(c) {
               case '0':
               case '1':
                   num+=c;
@@ -1442,7 +1439,7 @@ double JKMathParser::readBin() {
       }
   }
 
-    if (num.length()<=0) num="0";
+    if (num.size()<=0) num="0";
     double fac=1;
     current_double=0;
     for (int i=num.size()-1; i>=0; i--) {
@@ -1537,7 +1534,7 @@ void JKMathParser::jkmpUnaryNode::evaluate(jkmpResult &res)
               res.boolean=!res.boolean;
               return ;
             } else if (res.type==jkmpBoolVector) {
-                for (int i=0; i<res.boolVec.size(); i++) res.boolVec[i]=!res.boolVec[i];
+                for (size_t i=0; i<res.boolVec.size(); i++) res.boolVec[i]=!res.boolVec[i];
                 return ;
              } else parser->jkmpError(JKMP::_("'!' only defined for bool (argument type was %1)").arg(res.typeName()));
            break;
@@ -1547,7 +1544,7 @@ void JKMathParser::jkmpUnaryNode::evaluate(jkmpResult &res)
                 return ;
             } else if (res.type==jkmpDoubleVector) {
                 //res.setDoubleVec(res.numVec.size());
-                for (int i=0; i<res.numVec.size(); i++) res.numVec[i]=-res.numVec[i];
+                for (size_t i=0; i<res.numVec.size(); i++) res.numVec[i]=-res.numVec[i];
                 return ;
              } else parser->jkmpError(JKMP::_("'-' only defined for numbers (argument type was %1)").arg(res.typeName()));
              break;
@@ -1556,7 +1553,7 @@ void JKMathParser::jkmpUnaryNode::evaluate(jkmpResult &res)
                  res.num=~res.toInteger();
                  return ;
              } else if (res.type==jkmpDoubleVector) {
-                 for (int i=0; i<res.numVec.size(); i++) res.numVec[i]=double(~int32_t(res.numVec[i]));
+                 for (size_t i=0; i<res.numVec.size(); i++) res.numVec[i]=double(~int32_t(res.numVec[i]));
                  return ;
              } else parser->jkmpError(JKMP::_("'~' only defined for integer numbers (argument type was %1)").arg(res.typeName()));
              break;
@@ -2114,10 +2111,10 @@ JKMathParser::jkmpNode *JKMathParser::jkmpNodeList::popFirst(bool deleteObject)
     if (list.size()>0) {
         if (deleteObject) {
             delete list.front();
-            list.removeFirst();
+            list.erase(list.begin());
         } else {
             JKMathParser::jkmpNode * n=list.front();
-            list.removeFirst();
+            list.erase(list.begin());
             return n;
         }
 
@@ -2130,12 +2127,10 @@ JKMathParser::jkmpNode *JKMathParser::jkmpNodeList::popLast(bool deleteObject)
     if (list.size()>0) {
         if (deleteObject) {
             delete list.back();
-            list.pop_back
-();
+            list.pop_back();
         } else {
             JKMathParser::jkmpNode * n=list.back();
-            list.pop_back
-();
+            list.pop_back();
             return n;
         }
 
@@ -2185,7 +2180,7 @@ JKMathParser::jkmpNode *JKMathParser::jkmpNodeList::copy(JKMathParser::jkmpNode 
 
     JKMathParser::jkmpNodeList* n= new JKMathParser::jkmpNodeList(getParser());
     if (list.size()>0) {
-        for (int i=0; i<list.size(); i++) {
+        for (size_t i=0; i<list.size(); i++) {
             n->add(list[i]->copy(n));
         }
     }
@@ -2197,7 +2192,7 @@ JKMathParser::jkmpNode *JKMathParser::jkmpNodeList::copy(JKMathParser::jkmpNode 
 bool JKMathParser::jkmpNodeList::createByteCode(JKMathParser::ByteCodeProgram &program, JKMathParser::ByteCodeEnvironment *environment)
 {
     bool ok=true;
-    for (int i=0; (ok&&i<list.size()); i++) {
+    for (size_t i=0; (ok&&i<list.size()); i++) {
         if (list[i]) {
             ok=ok&&list[i]->createByteCode(program, environment);
         }
@@ -2210,7 +2205,7 @@ JKMP::string JKMathParser::jkmpNodeList::print() const
 {
     JKMP::stringVector sl;
     if (list.size()>0) {
-        for (int i=0; i<list.size(); i++) {
+        for (size_t i=0; i<list.size(); i++) {
             sl<<list[i]->print();
         }
     }
@@ -2222,7 +2217,7 @@ JKMP::string JKMathParser::jkmpNodeList::printTree(int level) const
 {
     JKMP::stringVector sl;
     if (list.size()>0) {
-        for (int i=0; i<list.size(); i++) {
+        for (size_t i=0; i<list.size(); i++) {
             sl<<list[i]->printTree(level+1);
         }
     }
@@ -2236,7 +2231,7 @@ JKMathParser::jkmpNodeList::jkmpNodeList(JKMathParser *p, JKMathParser::jkmpNode
 
 JKMathParser::jkmpNodeList::~jkmpNodeList() {
 
-    if (list.size()>0) for (int i=0; i<list.size(); i++) {
+    if (list.size()>0) for (size_t i=0; i<list.size(); i++) {
         if (list[i]) delete list[i];
     }
     list.clear();
@@ -2341,7 +2336,7 @@ JKMathParser::jkmpFunctionNode::jkmpFunctionNode(JKMP::string name, JKMP::vector
   setParser(p);
   setParent(par);
   if (child.size()>0) {
-    for (int i=0; i<child.size(); i++) {
+    for (size_t i=0; i<child.size(); i++) {
       if (child[i]) child[i]->setParent(this);
     }
   }
@@ -2360,7 +2355,7 @@ JKMathParser::jkmpNode *JKMathParser::jkmpFunctionNode::copy(JKMathParser::jkmpN
 {
     JKMP::vector<jkmpNode *> params;
     if (child.size()>0) {
-        for (int i=0; i<child.size(); i++) {
+        for (size_t i=0; i<child.size(); i++) {
             params<<child[i]->copy(NULL);
         }
     }
@@ -2381,7 +2376,7 @@ bool JKMathParser::jkmpFunctionNode::createByteCode(JKMathParser::ByteCodeProgra
     if (ok) {
         JKMathParser::jkmpFunctionDescriptor def;
         if (environment->functionDefs.contains(fun) && environment->functionDefs[fun].second) {
-            if (environment->inFunctionCalls.contains(fun)) {
+            if (environment->inFunctionCalls.find(fun)!=environment->inFunctionCalls.end()) {
                 getParser()->jkmpError(JKMP::_("no recursive function calls allowed in byte-code (function '%1')").arg(fun));
                 return false;
             } else if (environment->functionDefs[fun].first.size()==params) {
@@ -2434,7 +2429,7 @@ bool JKMathParser::jkmpFunctionNode::createByteCode(JKMathParser::ByteCodeProgra
 JKMP::string JKMathParser::jkmpFunctionNode::print() const
 {
     JKMP::stringVector sl;
-    for (int i=0; i<child.size(); i++) {
+    for (size_t i=0; i<child.size(); i++) {
         sl<<child[i]->print();
     }
     return JKMP::string("%1(%2)").arg(fun).arg(sl.join(", "));
@@ -2444,7 +2439,7 @@ JKMP::string JKMathParser::jkmpFunctionNode::printTree(int level) const
 {
     JKMP::stringVector sl;
     if (child.size()>0) {
-        for (int i=0; i<child.size(); i++) {
+        for (size_t i=0; i<child.size(); i++) {
             sl<<child[i]->printTree(level+1);
         }
     }
@@ -2456,7 +2451,7 @@ JKMP::string JKMathParser::jkmpFunctionNode::printTree(int level) const
 JKMathParser::jkmpFunctionNode::~jkmpFunctionNode() {
 
     if (child.size()>0) {
-      for (int i=0; i<child.size(); i++) {
+      for (size_t i=0; i<child.size(); i++) {
         if (child[i]) delete child[i];
       }
       child.clear();
@@ -2817,7 +2812,7 @@ void JKMathParser::jkmpFunctionDescriptor::evaluate(jkmpResult &r, const JKMP::v
             if (parent && parameterNames.size()>0) {
                 parent->enterBlock();
                 //qDebug()<<"enter block "<<parent->getBlockLevel();
-                for (int i=0; i<parameterNames.size(); i++) {
+                for (size_t i=0; i<parameterNames.size(); i++) {
                     parent->addVariable(parameterNames[i], parameters[i]);
                     //qDebug()<<"  adding "<<parameterNames[i]<<"="<<parameters[i].toString()<<"  levels="<<parent->getVariableLevels(parameterNames[i]);
                 }
@@ -2850,7 +2845,7 @@ void JKMathParser::jkmpFunctionDescriptor::evaluate(jkmpResult &r,  JKMP::vector
             if (parent && parameters.size()>0) {
                 parent->enterBlock();
                 //qDebug()<<"enter block "<<parent->getBlockLevel();
-                for (int i=0; i<parameters.size(); i++) {
+                for (size_t i=0; i<parameters.size(); i++) {
                     jkmpResult ri;
                     parameters[i]->evaluate(ri);
                     parent->addVariable(parameterNames[i], ri);
@@ -2867,14 +2862,14 @@ void JKMathParser::jkmpFunctionDescriptor::evaluate(jkmpResult &r,  JKMP::vector
     } else if (type==JKMathParser::functionC) {
         JKMP::vector<jkmpResult> ps;
         ps.resize(parameters.size());
-        for (int i=0; i<parameters.size(); i++) {
+        for (size_t i=0; i<parameters.size(); i++) {
             parameters[i]->evaluate(ps[i]);
         }
         r=function(ps.data(), ps.size(), parent);
     } else if (type==JKMathParser::functionCRefReturn) {
         JKMP::vector<jkmpResult> ps;
         ps.resize(parameters.size());
-        for (int i=0; i<parameters.size(); i++) {
+        for (size_t i=0; i<parameters.size(); i++) {
             parameters[i]->evaluate(ps[i]);
         }
         functionRR(r, ps.data(), ps.size(), parent);
@@ -3045,7 +3040,7 @@ void JKMathParser::executionEnvironment::addVariableBoolean(const JKMP::string &
 void JKMathParser::executionEnvironment::deleteVariable(const JKMP::string &name)
 {
     if (variables.contains(name)) {
-        for (int i=0; i<variables[name].size(); i++) {
+        for (size_t i=0; i<variables[name].size(); i++) {
             jkmpVariable v=variables[name].at(i).second;
             v.clearMemory();
         }
@@ -3059,15 +3054,16 @@ JKMP::string JKMathParser::executionEnvironment::printVariables() const
 
     if (variables.size()>0) {
 
-        JKMP::mapIterator<JKMP::string, JKMP::vector<std::pair<int, JKMathParser::jkmpVariable> > > itV(variables);
-        while (itV.hasNext()) {
-            itV.next();
+        auto itV=variables.begin();
+        while (itV!=variables.end()) {
 
-            jkmpVariable v=itV.value().back().second;
-            res+="'"+itV.key()+"'"+"\t\t";
+            jkmpVariable v=itV->second.back().second;
+            res+="'"+itV->first+"'"+"\t\t";
             if (v.isInternal()) res+="intern"; else res+="extern";
             res+="\t"+v.toResult().toTypeString();
             res+="\n";
+
+            ++itV;
 
         }
     }
@@ -3080,16 +3076,12 @@ JKMP::string JKMathParser::executionEnvironment::printFunctions() const
 
     if (functions.size()>0) {
 
-        JKMP::mapIterator<JKMP::string, JKMP::vector<std::pair<int, JKMathParser::jkmpFunctionDescriptor> > > itV(functions);
-        while (itV.hasNext()) {
-            itV.next();
+
+        for (auto itV=functions.begin(); itV!=functions.end(); ++itV) {
             if (res.size()>0) res+="\n";
 
-            res+=itV.value().back().second.toDefString();
+            res+=itV->second.back().second.toDefString();
 
-            /*jkmpFunctionDescriptor v=itV.value().back().second;
-            if (v.type==JKMathParser::functionNode) res+=JKMP::string("%1(%2): node\n").arg(itV.key()).arg(v.parameterNames.join(", "));
-            if (v.type==JKMathParser::functionC) res+=JKMP::string("%1(?): C function").arg(itV.key());*/
         }
     }
     return res;
@@ -3100,10 +3092,8 @@ JKMP::vector<std::pair<JKMP::string, JKMathParser::jkmpVariable> > JKMathParser:
     JKMP::vector<std::pair<JKMP::string, JKMathParser::jkmpVariable> > res;
 
     if (variables.size()>0) {
-        JKMP::mapIterator<JKMP::string, JKMP::vector<std::pair<int, JKMathParser::jkmpVariable> > > itV(variables);
-        while (itV.hasNext()) {
-            itV.next();
-            res.push_back(std::make_pair(itV.key(), itV.value().back().second));
+        for (auto itV=variables.begin(); itV!=variables.end(); ++itV) {
+            res.push_back(std::make_pair(itV->first, itV->second.back().second));
         }
     }
     return res;
@@ -3114,10 +3104,8 @@ JKMP::vector<std::pair<JKMP::string, JKMathParser::jkmpFunctionDescriptor> > JKM
     JKMP::vector<std::pair<JKMP::string, JKMathParser::jkmpFunctionDescriptor> > res;
 
     if (functions.size()>0) {
-        JKMP::mapIterator<JKMP::string, JKMP::vector<std::pair<int, JKMathParser::jkmpFunctionDescriptor> > > itV(functions);
-        while (itV.hasNext()) {
-            itV.next();
-            res.push_back(std::make_pair(itV.key(), itV.value().back().second));
+        for (auto itV=functions.begin(); itV!=functions.end(); ++itV) {
+            res.push_back(std::make_pair(itV->first, itV->second.back().second));
         }
     }
     return res;
@@ -3160,8 +3148,8 @@ void JKMathParser::executionEnvironment::addFunction(const JKMP::string &name, c
 void JKMathParser::executionEnvironment::clearVariables()
 {
     JKMP::stringVector keys=variables.keys();
-    for (int j=0; j<keys.size(); j++) {
-        for (int i=0; i<variables[keys[j]].size(); i++) {
+    for (size_t j=0; j<keys.size(); j++) {
+        for (size_t i=0; i<variables[keys[j]].size(); i++) {
             variables[keys[j]].operator[](i).second.clearMemory();
         }
     }
@@ -3203,9 +3191,8 @@ JKMathParser::jkmpNode *JKMathParser::jkmpFunctionAssignNode::copy(JKMathParser:
     else return new JKMathParser::jkmpFunctionAssignNode(function, parameterNames, NULL, getParser(), par);
 }
 
-bool JKMathParser::jkmpFunctionAssignNode::createByteCode(JKMathParser::ByteCodeProgram &program, JKMathParser::ByteCodeEnvironment *environment)
+bool JKMathParser::jkmpFunctionAssignNode::createByteCode(JKMathParser::ByteCodeProgram &/*program*/, JKMathParser::ByteCodeEnvironment *environment)
 {
-    Q_UNUSED(program);
     if (child) {
         environment->functionDefs[function]=std::make_pair(parameterNames, child);
         return true;
@@ -3240,9 +3227,8 @@ JKMathParser::jkmpNode *JKMathParser::jkmpConstantNode::copy(JKMathParser::jkmpN
     return new JKMathParser::jkmpConstantNode(data, getParser(), par);
 }
 
-bool JKMathParser::jkmpConstantNode::createByteCode(JKMathParser::ByteCodeProgram &program, ByteCodeEnvironment *environment)
+bool JKMathParser::jkmpConstantNode::createByteCode(JKMathParser::ByteCodeProgram &program, ByteCodeEnvironment */*environment*/)
 {
-    Q_UNUSED(environment);
     if (data.type==jkmpDouble) {
         program.push_back(JKMathParser::ByteCodeInstruction(bcPush, data.num));
     } else if (data.type==jkmpBool) {
@@ -3299,7 +3285,7 @@ void JKMathParser::jkmpVectorMatrixConstructionList::evaluate(jkmpResult &res)
         int cols=-1;
         int row=1;
         int thisrow=0;
-        for (int i=0; i<list.size(); i++) {
+        for (size_t i=0; i<list.size(); i++) {
             if (list[i]==NULL) {
                 if (nextSep<0 || cols<0) {
                     cols=realitems;
@@ -3334,7 +3320,7 @@ void JKMathParser::jkmpVectorMatrixConstructionList::evaluate(jkmpResult &res)
 
         if (list.size()>0) {
             int ri=0;
-            for (int i=0; i<list.size(); i++) {
+            for (size_t i=0; i<list.size(); i++) {
                 if (list[i]) {
                     r.setInvalid();
                     list[i]->evaluate(r);
@@ -3369,7 +3355,7 @@ void JKMathParser::jkmpVectorMatrixConstructionList::evaluate(jkmpResult &res)
     } else {
         res.setDoubleVec(0,0);
         if (list.size()>0) {
-            for (int i=0; i<list.size(); i++) {
+            for (size_t i=0; i<list.size(); i++) {
                 r.setInvalid();
                 list[i]->evaluate(r);
                 if (i==0) {
@@ -3383,7 +3369,7 @@ void JKMathParser::jkmpVectorMatrixConstructionList::evaluate(jkmpResult &res)
                     if (r.isValid && r.type==jkmpDouble) {
                         res.numVec.push_back(r.num);
                     } else if (r.isValid && r.type==jkmpDoubleVector) {
-                        res.numVec+=r.numVec;
+                        res.numVec<<r.numVec;
                     } else {
                         res.setInvalid();
                         if (getParser()) getParser()->jkmpError(JKMP::_("error in vector construct [Val1, Val2, ...]: item %1 has the wrong type (not number or number vector, but %2!)").arg(i+1).arg(r.typeName()));
@@ -3393,7 +3379,7 @@ void JKMathParser::jkmpVectorMatrixConstructionList::evaluate(jkmpResult &res)
                     if (r.isValid && r.type==jkmpString) {
                         res.strVec.push_back(r.str);
                     } else if (r.isValid && r.type==jkmpStringVector) {
-                        res.strVec.push_back(r.strVec);
+                        res.strVec<<r.strVec;
                     } else {
                         res.setInvalid();
                         if (getParser()) getParser()->jkmpError(JKMP::_("error in vector construct [Val1, Val2, ...]: item %1 has the wrong type (not string or string vector, but %2!)").arg(i+1).arg(r.typeName()));
@@ -3403,7 +3389,7 @@ void JKMathParser::jkmpVectorMatrixConstructionList::evaluate(jkmpResult &res)
                     if (r.isValid && r.type==jkmpBool) {
                         res.boolVec.push_back(r.boolean);
                     } else if (r.isValid && r.type==jkmpBoolVector) {
-                        res.boolVec+=r.boolVec;
+                        res.boolVec<<r.boolVec;
                     } else {
                         res.setInvalid();
                         if (getParser()) getParser()->jkmpError(JKMP::_("error in vector construct [Val1, Val2, ...]: item %1 has the wrong type (not boolean or boolean vector, but %2!)").arg(i+1).arg(r.typeName()));
@@ -3419,7 +3405,7 @@ JKMathParser::jkmpNode *JKMathParser::jkmpVectorMatrixConstructionList::copy(JKM
 {
     JKMathParser::jkmpNodeList* n= new JKMathParser::jkmpVectorMatrixConstructionList(getParser(), par);
     if (list.size()>0) {
-        for (int i=0; i<list.size(); i++) {
+        for (size_t i=0; i<list.size(); i++) {
             if (list[i]) n->add(list[i]->copy(n));
             else n->add(list[i]);
         }
@@ -3430,10 +3416,8 @@ JKMathParser::jkmpNode *JKMathParser::jkmpVectorMatrixConstructionList::copy(JKM
 
 }
 
-bool JKMathParser::jkmpVectorMatrixConstructionList::createByteCode(JKMathParser::ByteCodeProgram &program, JKMathParser::ByteCodeEnvironment *environment)
+bool JKMathParser::jkmpVectorMatrixConstructionList::createByteCode(JKMathParser::ByteCodeProgram &/*program*/, JKMathParser::ByteCodeEnvironment */*environment*/)
 {
-    Q_UNUSED(program);
-    Q_UNUSED(environment);
     if (getParser()) getParser()->jkmpError(JKMP::_("no vector constructs in byte-code allowed"));
     return false;
 }
@@ -3441,7 +3425,7 @@ bool JKMathParser::jkmpVectorMatrixConstructionList::createByteCode(JKMathParser
 JKMP::string JKMathParser::jkmpVectorMatrixConstructionList::print() const
 {
     JKMP::stringVector sl;
-    for (int i=0; i<list.size(); i++) {
+    for (size_t i=0; i<list.size(); i++) {
         if (list[i]) sl<<list[i]->print();
         else sl<<"; ";
     }
@@ -3452,7 +3436,7 @@ JKMP::string JKMathParser::jkmpVectorMatrixConstructionList::printTree(int level
 {
     JKMP::stringVector sl;
     if (list.size()>0) {
-        for (int i=0; i<list.size(); i++) {
+        for (size_t i=0; i<list.size(); i++) {
             if (list[i]) sl<<list[i]->printTree(level+1);
             else sl<<"; ";
         }
@@ -3562,7 +3546,7 @@ JKMathParser::jkmpCasesNode::jkmpCasesNode(JKMathParser *p, JKMathParser::jkmpNo
 JKMathParser::jkmpCasesNode::~jkmpCasesNode()
 {
     if (elseNode) delete elseNode;
-    for (int i=0; i<casesNodes.size(); i++) {
+    for (size_t i=0; i<casesNodes.size(); i++) {
         if (casesNodes[i].first) delete casesNodes[i].first;
         if (casesNodes[i].second) delete casesNodes[i].second;
     }
@@ -3585,7 +3569,7 @@ void JKMathParser::jkmpCasesNode::evaluate(jkmpResult &r)
 {
     r.isValid=false;
     jkmpResult d;
-    for (int i=0; i<casesNodes.size(); i++) {
+    for (size_t i=0; i<casesNodes.size(); i++) {
         casesNodes[i].first->evaluate(d);
         if (d.type==jkmpBool) {
             if (d.boolean) {
@@ -3604,7 +3588,7 @@ void JKMathParser::jkmpCasesNode::evaluate(jkmpResult &r)
 JKMathParser::jkmpNode *JKMathParser::jkmpCasesNode::copy(JKMathParser::jkmpNode *par)
 {
     JKMathParser::jkmpCasesNode* res=new JKMathParser::jkmpCasesNode(getParser(), par);
-    for (int i=0; i<casesNodes.size(); i++) {
+    for (size_t i=0; i<casesNodes.size(); i++) {
         JKMathParser::jkmpNode* n1=NULL;
         JKMathParser::jkmpNode* n2=NULL;
         if (casesNodes[i].first) n1=casesNodes[i].first->copy();
@@ -3650,12 +3634,12 @@ bool JKMathParser::jkmpCasesNode::createByteCode(JKMathParser::ByteCodeProgram &
     bool ok=true;
     JKMP::vector<int> caseadresses;
     JKMP::map<int, int> jumpadresses;
-    for (int i=0; (ok && i<casesNodes.size()); i++) {
+    for (size_t i=0; (ok && i<casesNodes.size()); i++) {
         ok=ok&&casesNodes[i].first->createByteCode(program, environment);
         program.push_back(JKMathParser::ByteCodeInstruction(JKMathParser::bcLogicNot));
         if (ok) {
             caseadresses<<program.size();
-            program.push_back(JKMathParser::ByteCodeInstruction(JKMathParser::bcJumpCondRel, i+1));
+            program.push_back(JKMathParser::ByteCodeInstruction(JKMathParser::bcJumpCondRel, static_cast<int>(i+1)));
             ok=ok&&casesNodes[i].second->createByteCode(program, environment);
             caseadresses<<program.size();
             program.push_back(JKMathParser::ByteCodeInstruction(JKMathParser::bcJumpRel, -1));
@@ -3668,7 +3652,7 @@ bool JKMathParser::jkmpCasesNode::createByteCode(JKMathParser::ByteCodeProgram &
     }
     jumpadresses[-1]=program.size();
     program.push_back(JKMathParser::ByteCodeInstruction(JKMathParser::bcNOP));
-    for (int i=0; i<caseadresses.size(); i++) {
+    for (size_t i=0; i<caseadresses.size(); i++) {
         int oldjmp=program[caseadresses[i]].intpar;
        // //qDebug()<<"   convert JMP "<<oldjmp<<"  ==>  JMP "<<jumpadresses[oldjmp]-caseadresses[i]<<" (new abs: "<<jumpadresses[oldjmp]<<")    @ "<<caseadresses[i];
         program[caseadresses[i]].intpar=jumpadresses[oldjmp]-caseadresses[i];
@@ -3679,7 +3663,7 @@ bool JKMathParser::jkmpCasesNode::createByteCode(JKMathParser::ByteCodeProgram &
 JKMP::string JKMathParser::jkmpCasesNode::print() const
 {
     JKMP::stringVector sl;
-    for (int i=0; i<casesNodes.size(); i++) {
+    for (size_t i=0; i<casesNodes.size(); i++) {
         sl<<casesNodes[i].first->print();
         sl<<casesNodes[i].second->print();
     }
@@ -3690,7 +3674,7 @@ JKMP::string JKMathParser::jkmpCasesNode::print() const
 JKMP::string JKMathParser::jkmpCasesNode::printTree(int level) const
 {
     JKMP::stringVector sl;
-    for (int i=0; i<casesNodes.size(); i++) {
+    for (size_t i=0; i<casesNodes.size(); i++) {
         sl<<casesNodes[i].first->printTree(level+1);
         sl<<casesNodes[i].second->printTree(level+1);
     }
@@ -3987,11 +3971,11 @@ void JKMathParser::jkmpVectorOperationNode::evaluate(jkmpResult &r)
              }
 
          } else if (operationName=="sum") {
-             if (resType==jkmpDoubleVector) r.setDouble(qfstatisticsSum(numVec));
+             if (resType==jkmpDoubleVector) r.setDouble(statisticsSum(numVec.data(), numVec.size()));
              else if (resType==jkmpStringVector) r.setString(strVec.join(""));
              else r.setInvalid();
          } else if (operationName=="prod") {
-             if (resType==jkmpDoubleVector) r.setDouble(qfstatisticsProd(numVec));
+             if (resType==jkmpDoubleVector) r.setDouble(statisticsProd(numVec.data(), numVec.size()));
              else r.setInvalid();
          }
      }
@@ -4077,7 +4061,7 @@ bool JKMathParser::jkmpVectorOperationNode::createByteCode(JKMathParser::ByteCod
             program.push_back(JKMathParser::ByteCodeInstruction(JKMathParser::bcHeapRead, runvar));
             program.push_back(JKMathParser::ByteCodeInstruction(JKMathParser::bcAdd));
             program.push_back(JKMathParser::ByteCodeInstruction(JKMathParser::bcHeapWrite, runvar));
-            program.push_back(JKMathParser::ByteCodeInstruction(JKMathParser::bcBJumpRel, program.size()-expr_adress));
+            program.push_back(JKMathParser::ByteCodeInstruction(JKMathParser::bcBJumpRel, static_cast<int>(program.size()-expr_adress)));
             environment->popVar(vnRun);
             environment->popVar(vnDelta);
             environment->popVar(vnStop);
@@ -4181,7 +4165,7 @@ void JKMathParser::jkmpVectorElementAssignNode::evaluate(jkmpResult &res)
          }
          if (var.type==jkmpList) {
              if (ii.size()>=1) {
-                 for (int i=0; i<ii.size(); i++) {
+                 for (size_t i=0; i<ii.size(); i++) {
                      if (ii[i]>=0 && ii[i]<var.listData.size()) {
                          var.listData[ii[i]]=exp;
                          getParser()->setVariable(variable, var);
@@ -4215,7 +4199,7 @@ void JKMathParser::jkmpVectorElementAssignNode::evaluate(jkmpResult &res)
                  res.type=jkmpDoubleVector;
                  res.numVec.clear();
                  const double t=dat[0];
-                 for (int i=0; i<ii.size(); i++) {
+                 for (size_t i=0; i<ii.size(); i++) {
                      if (ii[i]>=0 && ii[i]<var.numVec.size()) {
                          var.numVec[ii[i]]=t;
                          res.numVec<<t;
@@ -4229,7 +4213,7 @@ void JKMathParser::jkmpVectorElementAssignNode::evaluate(jkmpResult &res)
              } else if (ii.size()>1 && dat.size()==ii.size()) {
                  res.type=jkmpDoubleVector;
                  res.numVec.clear();
-                 for (int i=0; i<ii.size(); i++) {
+                 for (size_t i=0; i<ii.size(); i++) {
                      if (ii[i]>=0 && ii[i]<var.numVec.size()) {
                          const double t=dat[i];
                          var.numVec[ii[i]]=t;
@@ -4264,7 +4248,7 @@ void JKMathParser::jkmpVectorElementAssignNode::evaluate(jkmpResult &res)
                  res.type=jkmpStringVector;
                  res.strVec.clear();
                  const JKMP::string t=dat[0];
-                 for (int i=0; i<ii.size(); i++) {
+                 for (size_t i=0; i<ii.size(); i++) {
                      if (ii[i]>=0 && ii[i]<var.strVec.size()) {
                          var.strVec[ii[i]]=t;
                          res.strVec<<t;
@@ -4278,7 +4262,7 @@ void JKMathParser::jkmpVectorElementAssignNode::evaluate(jkmpResult &res)
              } else if (ii.size()>1 && dat.size()==ii.size()) {
                  res.type=jkmpStringVector;
                  res.strVec.clear();
-                 for (int i=0; i<ii.size(); i++) {
+                 for (size_t i=0; i<ii.size(); i++) {
                      if (ii[i]>=0 && ii[i]<var.strVec.size()) {
                          const JKMP::string t=dat[i];
                          var.strVec[ii[i]]=t;
@@ -4312,7 +4296,7 @@ void JKMathParser::jkmpVectorElementAssignNode::evaluate(jkmpResult &res)
                  res.type=jkmpBoolVector;
                  res.boolVec.clear();
                  const bool t=dat[0];
-                 for (int i=0; i<ii.size(); i++) {
+                 for (size_t i=0; i<ii.size(); i++) {
                      if (ii[i]>=0 && ii[i]<var.boolVec.size()) {
                          var.boolVec[ii[i]]=t;
                          res.boolVec<<t;
@@ -4363,7 +4347,7 @@ void JKMathParser::jkmpVectorElementAssignNode::evaluate(jkmpResult &res)
                  res.type=jkmpString;
                  res.str.clear();
                  char t=dat[0];
-                 for (int i=0; i<ii.size(); i++) {
+                 for (size_t i=0; i<ii.size(); i++) {
                      if (ii[i]>=0 && ii[i]<var.str.size()) {
                          var.str[ii[i]]=t;
                          res.str+=t;
@@ -4377,7 +4361,7 @@ void JKMathParser::jkmpVectorElementAssignNode::evaluate(jkmpResult &res)
              } else if (ii.size()>1 && dat.size()==ii.size()) {
                  res.type=jkmpString;
                  res.str.clear();
-                 for (int i=0; i<ii.size(); i++) {
+                 for (size_t i=0; i<ii.size(); i++) {
                      if (ii[i]>=0 && ii[i]<var.str.size()) {
                          char t=dat[i];
                          var.str[ii[i]]=t;
@@ -4452,12 +4436,12 @@ void JKMathParser::jkmpVariableVectorAccessNode::evaluate(jkmpResult &res)
                 return;
             }
             int trues=0;
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]) trues++;
             }
             res.setDoubleVec(trues);
             int j=0;
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]) {
                     res.numVec[j]=var.numVec[i];
                     j++;
@@ -4472,7 +4456,7 @@ void JKMathParser::jkmpVariableVectorAccessNode::evaluate(jkmpResult &res)
             }
             res.type=jkmpDoubleVector;
             res.numVec=JKMP::vector<double>(ii.size(), 0);
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]>=0 && ii[i]<var.numVec.size()) {
                     res.numVec[i]=var.numVec[ii[i]];
                 } else {
@@ -4497,12 +4481,12 @@ void JKMathParser::jkmpVariableVectorAccessNode::evaluate(jkmpResult &res)
                 return;
             }
             int trues=0;
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]) trues++;
             }
             res.setList(trues);
             int j=0;
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]) {
                     res.listData[j]=var.listData[i];
                     j++;
@@ -4517,7 +4501,7 @@ void JKMathParser::jkmpVariableVectorAccessNode::evaluate(jkmpResult &res)
                 return;
             }
             res.setList(ii.size());
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]>=0 && ii[i]<var.listData.size()) {
                     res.listData[i]=var.listData[ii[i]];
                 } else {
@@ -4541,12 +4525,12 @@ void JKMathParser::jkmpVariableVectorAccessNode::evaluate(jkmpResult &res)
                 return;
             }
             int trues=0;
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]) trues++;
             }
             res.setStringVec(trues);
             int j=0;
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]) {
                     res.strVec[j]=var.strVec[i];
                     j++;
@@ -4562,7 +4546,7 @@ void JKMathParser::jkmpVariableVectorAccessNode::evaluate(jkmpResult &res)
             res.type=jkmpStringVector;
             res.strVec.clear();
             //res.strVec.resize(ii.size(), JKMP::string());
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]>=0 && ii[i]<var.strVec.size()) {
                     res.strVec<<var.strVec[ii[i]];
                 } else {
@@ -4587,12 +4571,12 @@ void JKMathParser::jkmpVariableVectorAccessNode::evaluate(jkmpResult &res)
                 return;
             }
             int trues=0;
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]) trues++;
             }
             res.setBoolVec(trues);
             int j=0;
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]) {
                     res.boolVec[j]=var.boolVec[i];
                     j++;
@@ -4607,7 +4591,7 @@ void JKMathParser::jkmpVariableVectorAccessNode::evaluate(jkmpResult &res)
             }
             res.type=jkmpBoolVector;
             res.boolVec=JKMP::vector<bool>(ii.size(), 0);
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]>=0 && ii[i]<var.boolVec.size()) {
                     res.boolVec[i]=var.boolVec[ii[i]];
                 } else {
@@ -4632,12 +4616,12 @@ void JKMathParser::jkmpVariableVectorAccessNode::evaluate(jkmpResult &res)
                 return;
             }
             int trues=0;
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]) trues++;
             }
             res.setString(trues);
             int j=0;
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]) {
                     res.str[j]=var.str[i];
                     j++;
@@ -4652,7 +4636,7 @@ void JKMathParser::jkmpVariableVectorAccessNode::evaluate(jkmpResult &res)
             }
             res.type=jkmpString;
             res.str="";
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]>=0 && ii[i]<var.str.size()) {
                     res.str+=var.str[ii[i]];
                 } else {
@@ -4713,7 +4697,7 @@ void JKMathParser::jkmpNode::evaluate(jkmpResult &result)
 
 double JKMathParser::evaluateBytecode(const JKMathParser::ByteCodeProgram &program)
 {
-    std::stack<double> resultStack;
+    JKMP::vector<double> resultStack;
     JKMP::vector<double> heap;
     //int heappointer=0;
     heap.resize(ByteCodeInitialHeapSize);
@@ -4787,7 +4771,7 @@ double JKMathParser::evaluateBytecode(const JKMathParser::ByteCodeProgram &progr
                 } else
 #endif
                 {
-                    const std::stack<double>::iterator it=resultStack.end();
+                    const JKMP::vector<double>::iterator it=resultStack.end();
                     switch (itp->intpar) {
                         case 0: *(it-1)=((jkmpEvaluateFuncSimple0Param)itp->pntpar)(); break;
                         case 1: *(it-1)=((jkmpEvaluateFuncSimple1Param)itp->pntpar)(*(it-1)); break;
@@ -4804,7 +4788,7 @@ double JKMathParser::evaluateBytecode(const JKMathParser::ByteCodeProgram &progr
                 } else
 #endif
                 {
-                    const std::stack<double>::iterator it=resultStack.end();
+                    const JKMP::vector<double>::iterator it=resultStack.end();
                     switch (itp->intpar) {
                         case 0: *(it-1)=((jkmpEvaluateFuncSimple0ParamMP)itp->pntpar)(this); break;
                         case 1: *(it-1)=((jkmpEvaluateFuncSimple1ParamMP)itp->pntpar)(*(it-1), this); break;
@@ -4821,7 +4805,7 @@ double JKMathParser::evaluateBytecode(const JKMathParser::ByteCodeProgram &progr
             } else
 #endif
             {
-                const std::stack<double>::iterator it=resultStack.end();
+               // const JKMP::vector<double>::iterator it=resultStack.end();
                 JKMP::vector<jkmpResult> parameters;
                 for (int i=0; i<itp->intpar; i++) {
                     parameters<<jkmpResult(resultStack.pop());
@@ -4844,7 +4828,7 @@ double JKMathParser::evaluateBytecode(const JKMathParser::ByteCodeProgram &progr
                 } else
 #endif
                 {
-                    const std::stack<double>::iterator it=resultStack.end();
+                    const JKMP::vector<double>::iterator it=resultStack.end();
                     *(it-2) = (*(it-1))+(*(it-2));
                     resultStack.pop();
 
@@ -4858,7 +4842,7 @@ double JKMathParser::evaluateBytecode(const JKMathParser::ByteCodeProgram &progr
                 } else
 #endif
                 {
-                    const std::stack<double>::iterator it=resultStack.end();
+                    const JKMP::vector<double>::iterator it=resultStack.end();
                     *(it-2) = (*(it-1))-(*(it-2));
                     resultStack.pop();
 
@@ -4872,7 +4856,7 @@ double JKMathParser::evaluateBytecode(const JKMathParser::ByteCodeProgram &progr
                 } else
 #endif
                 {
-                    const std::stack<double>::iterator it=resultStack.end();
+                    const JKMP::vector<double>::iterator it=resultStack.end();
                     *(it-2) = (*(it-1))*(*(it-2));
                     resultStack.pop();
 
@@ -4887,7 +4871,7 @@ double JKMathParser::evaluateBytecode(const JKMathParser::ByteCodeProgram &progr
                 } else
 #endif
                 {
-                    const std::stack<double>::iterator it=resultStack.end();
+                    const JKMP::vector<double>::iterator it=resultStack.end();
                     *(it-2) = (*(it-1))/(*(it-2));
                     resultStack.pop();
 
@@ -4901,7 +4885,7 @@ double JKMathParser::evaluateBytecode(const JKMathParser::ByteCodeProgram &progr
                 } else
 #endif
                 {
-                    const std::stack<double>::iterator it=resultStack.end();
+                    const JKMP::vector<double>::iterator it=resultStack.end();
                     *(it-2) = int32_t(*(it-1))%int32_t(*(it-2));
                     resultStack.pop();
 
@@ -4915,7 +4899,7 @@ double JKMathParser::evaluateBytecode(const JKMathParser::ByteCodeProgram &progr
                 } else
 #endif
                 {
-                    const std::stack<double>::iterator it=resultStack.end();
+                    const JKMP::vector<double>::iterator it=resultStack.end();
                     *(it-2) = pow((*(it-1)),(*(it-2)));
                     resultStack.pop();
 
@@ -4930,7 +4914,7 @@ double JKMathParser::evaluateBytecode(const JKMathParser::ByteCodeProgram &progr
                 } else
 #endif
                 {
-                    const std::stack<double>::iterator it=resultStack.end();
+                    const JKMP::vector<double>::iterator it=resultStack.end();
                     *(it-1) = -(*(it-1));
 
                 }
@@ -4946,7 +4930,7 @@ double JKMathParser::evaluateBytecode(const JKMathParser::ByteCodeProgram &progr
                 } else
 #endif
                 {
-                    const std::stack<double>::iterator it=resultStack.end();
+                    const JKMP::vector<double>::iterator it=resultStack.end();
                     *(it-2) = int32_t(*(it-1))&int32_t(*(it-2));
                     resultStack.pop();
 
@@ -4959,7 +4943,7 @@ double JKMathParser::evaluateBytecode(const JKMathParser::ByteCodeProgram &progr
                 } else
 #endif
                 {
-                    const std::stack<double>::iterator it=resultStack.end();
+                    const JKMP::vector<double>::iterator it=resultStack.end();
                     *(it-2) = int32_t(*(it-1))|int32_t(*(it-2));
                     resultStack.pop();
 
@@ -4974,7 +4958,7 @@ double JKMathParser::evaluateBytecode(const JKMathParser::ByteCodeProgram &progr
                 } else
 #endif
                 {
-                    const std::stack<double>::iterator it=resultStack.end();
+                    const JKMP::vector<double>::iterator it=resultStack.end();
                     *(it-1) = ~int32_t(*(it-1));
 
                 }
@@ -4990,7 +4974,7 @@ double JKMathParser::evaluateBytecode(const JKMathParser::ByteCodeProgram &progr
                 } else
 #endif
                 {
-                    const std::stack<double>::iterator it=resultStack.end();
+                    const JKMP::vector<double>::iterator it=resultStack.end();
                     *(it-2) = ((*(it-1)!=0.0)&&(*(it-2)!=0.0))?1:0;
                     resultStack.pop();
 
@@ -5003,7 +4987,7 @@ double JKMathParser::evaluateBytecode(const JKMathParser::ByteCodeProgram &progr
                 } else
 #endif
                 {
-                    const std::stack<double>::iterator it=resultStack.end();
+                    const JKMP::vector<double>::iterator it=resultStack.end();
                     *(it-2) = ((*(it-1)!=0.0)||(*(it-2)!=0.0))?1:0;
                     resultStack.pop();
 
@@ -5018,7 +5002,7 @@ double JKMathParser::evaluateBytecode(const JKMathParser::ByteCodeProgram &progr
                 } else
 #endif
                 {
-                    const std::stack<double>::iterator it=resultStack.end();
+                    const JKMP::vector<double>::iterator it=resultStack.end();
                     *(it-2) = (((*(it-1)!=0.0)&&(*(it-2)==0.0))||((*(it-1)==0.0)&&(*(it-2)!=0.0)))?1:0;
                     resultStack.pop();
 
@@ -5034,7 +5018,7 @@ double JKMathParser::evaluateBytecode(const JKMathParser::ByteCodeProgram &progr
                 } else
 #endif
                 {
-                    const std::stack<double>::iterator it=resultStack.end();
+                    const JKMP::vector<double>::iterator it=resultStack.end();
                     *(it-1) = (!(*(it-1)!=0.0))?1:0;
 
                 }
@@ -5048,7 +5032,7 @@ double JKMathParser::evaluateBytecode(const JKMathParser::ByteCodeProgram &progr
                 } else
 #endif
                 {
-                    const std::stack<double>::iterator it=resultStack.end();
+                    const JKMP::vector<double>::iterator it=resultStack.end();
                     *(it-2) = ((*(it-1))==(*(it-2)))?1:0;
                     resultStack.pop();
 
@@ -5065,7 +5049,7 @@ double JKMathParser::evaluateBytecode(const JKMathParser::ByteCodeProgram &progr
                 } else
 #endif
                 {
-                    const std::stack<double>::iterator it=resultStack.end();
+                    const JKMP::vector<double>::iterator it=resultStack.end();
                     *(it-2) = ((*(it-1))<(*(it-2)))?1:0;
                     resultStack.pop();
 
@@ -5080,7 +5064,7 @@ double JKMathParser::evaluateBytecode(const JKMathParser::ByteCodeProgram &progr
                 } else
 #endif
                 {
-                    const std::stack<double>::iterator it=resultStack.end();
+                    const JKMP::vector<double>::iterator it=resultStack.end();
                     *(it-2) = ((*(it-1))<=(*(it-2)))?1:0;
                     resultStack.pop();
 
@@ -5258,9 +5242,9 @@ JKMP::string JKMathParser::printBytecode(const JKMathParser::ByteCodeInstruction
 JKMP::string JKMathParser::printBytecode(const JKMathParser::ByteCodeProgram &program)
 {
     JKMP::string res="";
-    for (int i = 0; i < program.size(); ++i) {
+    for (size_t i = 0; i < program.size(); ++i) {
         const ByteCodeInstruction& inst=program[i];
-        res+=JKMP::string("%1: %2\n").arg(i, 5, 10, char(' ')).arg(printBytecode(inst));
+        res+=JKMP::string("%1: %2\n").arg(JKMP::inttostr(i, 10, char(' '))).arg(printBytecode(inst));
     }
     return res;
 }
@@ -5388,12 +5372,12 @@ void JKMathParser::jkmpVectorAccessNode::evaluate(jkmpResult &res)
                 return;
             }
             int trues=0;
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]) trues++;
             }
             res.setList(trues);
             int j=0;
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]) {
                     res.listData[j]=var.listData[i];
                     j++;
@@ -5407,7 +5391,7 @@ void JKMathParser::jkmpVectorAccessNode::evaluate(jkmpResult &res)
                 return;
             }
             res.setList(ii.size());
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]>=0 && ii[i]<var.listData.size()) {
                     res.listData[i]=var.listData[ii[i]];
                 } else {
@@ -5432,12 +5416,12 @@ void JKMathParser::jkmpVectorAccessNode::evaluate(jkmpResult &res)
                 return;
             }
             int trues=0;
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]) trues++;
             }
             res.setDoubleVec(trues);
             int j=0;
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]) {
                     res.numVec[j]=var.numVec[i];
                     j++;
@@ -5452,7 +5436,7 @@ void JKMathParser::jkmpVectorAccessNode::evaluate(jkmpResult &res)
             }
             res.type=jkmpDoubleVector;
             res.numVec=JKMP::vector<double>(ii.size(), 0);
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]>=0 && ii[i]<var.numVec.size()) {
                     res.numVec[i]=var.numVec[ii[i]];
                 } else {
@@ -5477,12 +5461,12 @@ void JKMathParser::jkmpVectorAccessNode::evaluate(jkmpResult &res)
                 return;
             }
             int trues=0;
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]) trues++;
             }
             res.setStringVec(trues);
             int j=0;
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]) {
                     res.strVec[j]=var.strVec[i];
                     j++;
@@ -5498,7 +5482,7 @@ void JKMathParser::jkmpVectorAccessNode::evaluate(jkmpResult &res)
             res.type=jkmpStringVector;
             res.strVec.clear();
             //res.strVec.resize(ii.size(), JKMP::string());
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]>=0 && ii[i]<var.strVec.size()) {
                     res.strVec<<var.strVec[ii[i]];
                 } else {
@@ -5523,12 +5507,12 @@ void JKMathParser::jkmpVectorAccessNode::evaluate(jkmpResult &res)
                 return;
             }
             int trues=0;
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]) trues++;
             }
             res.setBoolVec(trues);
             int j=0;
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]) {
                     res.boolVec[j]=var.boolVec[i];
                     j++;
@@ -5543,7 +5527,7 @@ void JKMathParser::jkmpVectorAccessNode::evaluate(jkmpResult &res)
             }
             res.type=jkmpBoolVector;
             res.boolVec=JKMP::vector<bool>(ii.size(), 0);
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]>=0 && ii[i]<var.boolVec.size()) {
                     res.boolVec[i]=var.boolVec[ii[i]];
                 } else {
@@ -5568,12 +5552,12 @@ void JKMathParser::jkmpVectorAccessNode::evaluate(jkmpResult &res)
                 return;
             }
             int trues=0;
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]) trues++;
             }
             res.setString(trues);
             int j=0;
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]) {
                     res.str[j]=var.str[i];
                     j++;
@@ -5588,7 +5572,7 @@ void JKMathParser::jkmpVectorAccessNode::evaluate(jkmpResult &res)
             }
             res.type=jkmpString;
             res.str="";
-            for (int i=0; i<ii.size(); i++) {
+            for (size_t i=0; i<ii.size(); i++) {
                 if (ii[i]>=0 && ii[i]<var.str.size()) {
                     res.str+=var.str[ii[i]];
                 } else {
@@ -5680,7 +5664,7 @@ void JKMathParser::jkmpListConstruction::evaluate(jkmpResult &res)
 {
     res.setList();
     if (list.size()>0) {
-        for (int i=0; i<list.size(); i++) {
+        for (size_t i=0; i<list.size(); i++) {
             res.listData.push_back(jkmpResult::invalidResult());
             list[i]->evaluate(res.listData.back());
             if (!res.listData.back().isValid) {
@@ -5696,7 +5680,7 @@ JKMathParser::jkmpNode *JKMathParser::jkmpListConstruction::copy(JKMathParser::j
 {
     JKMathParser::jkmpNodeList* n= new JKMathParser::jkmpListConstruction(getParser(), par);
     if (list.size()>0) {
-        for (int i=0; i<list.size(); i++) {
+        for (size_t i=0; i<list.size(); i++) {
             n->add(list[i]->copy(n));
         }
     }
@@ -5705,10 +5689,8 @@ JKMathParser::jkmpNode *JKMathParser::jkmpListConstruction::copy(JKMathParser::j
     return n;
 }
 
-bool JKMathParser::jkmpListConstruction::createByteCode(JKMathParser::ByteCodeProgram &program, JKMathParser::ByteCodeEnvironment *environment)
+bool JKMathParser::jkmpListConstruction::createByteCode(JKMathParser::ByteCodeProgram &/*program*/, JKMathParser::ByteCodeEnvironment */*environment*/)
 {
-    Q_UNUSED(program);
-    Q_UNUSED(environment);
     if (getParser()) getParser()->jkmpError(JKMP::_("no list constructs in byte-code allowed"));
     return false;
 }
@@ -5716,7 +5698,7 @@ bool JKMathParser::jkmpListConstruction::createByteCode(JKMathParser::ByteCodePr
 JKMP::string JKMathParser::jkmpListConstruction::print() const
 {
     JKMP::stringVector sl;
-    for (int i=0; i<list.size(); i++) {
+    for (size_t i=0; i<list.size(); i++) {
         sl<<list[i]->print();
     }
     return JKMP::string("{ %1 }").arg(sl.join(", "));
@@ -5726,7 +5708,7 @@ JKMP::string JKMathParser::jkmpListConstruction::printTree(int level) const
 {
     JKMP::stringVector sl;
     if (list.size()>0) {
-        for (int i=0; i<list.size(); i++) {
+        for (size_t i=0; i<list.size(); i++) {
             sl<<list[i]->printTree(level+1);
         }
     }

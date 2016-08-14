@@ -10,22 +10,26 @@ TARGET = parser_test
 
 SOURCES += main.cpp \ 
     ../jkmathparser.cpp \
-    ../jkmathparserdefaultlib.cpp \
-    ../jkmathparsertools.cpp \
-    ../jkmathparserbase.cpp \
-    ../jkmathparserstringtools.cpp \
+    ../jkmpdefaultlib.cpp \
+    ../jkmptools.cpp \
+    ../jkmpbase.cpp \
+    ../jkmpstringtools.cpp \
+    ../jkmpmathtools.cpp \
+    ../jkmpfilenametools.cpp \
     ../StatisticsTools/correlator_multitau.cc \
     ../StatisticsTools/simanneal.cpp \
     ../StatisticsTools/statistics_tools.cpp
 
 HEADERS += \ 
     ../jkmathparser.h \
-    ../jkmathparserbase.h \
-    ../jkmathparserdefaultlib.h \
-    ../jkmathparserlib_imexport.h \
-    ../jkmathparsertools.h \
+    ../jkmpbase.h \
+    ../jkmpdefaultlib.h \
+    ../jkmplib_imexport.h \
+    ../jkmptools.h \
+    ../jkmpstringtools.h \
+    ../jkmpmathtools.h \
+    ../jkmpfilenametools.h \
     ../extlibs/MersenneTwister.h \
-    ../jkmathparserstringtools.h \
     ../StatisticsTools/correlator.h \
     ../StatisticsTools/correlator_block.h \
     ../StatisticsTools/correlator_lag.h \
@@ -36,6 +40,4 @@ HEADERS += \
     ../StatisticsTools/shiftregister.h \
     ../StatisticsTools/simanneal.h \
     ../StatisticsTools/statistics_tools.h
-
-CONFIG += exceptions rtti stl
 

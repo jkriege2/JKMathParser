@@ -19,9 +19,12 @@
 #ifndef JKMATHPARSERDEFAULTLIB_H
 #define JKMATHPARSERDEFAULTLIB_H
 
-#include "jkmathparsertools.h"
-#include "jkmathparserbase.h"
-#include "jkmathparserstringtools.h"
+#include "jkmptools.h"
+#include "jkmpbase.h"
+#include "jkmpstringtools.h"
+#include "jkmpmathtools.h"
+#include "jkmpfilenametools.h"
+#include "./StatisticsTools/statistics_tools.h"
 
 
 /******************************************************************************************
@@ -44,18 +47,17 @@ namespace JKMathParser_DefaultLib {
     JKMATHPARSER_DEFINE_1PARAM_NUM2BOOL_FUNC(fIsNan, isnan, std::isnan)
     JKMATHPARSER_DEFINE_1PARAM_NUM2BOOL_FUNC(fIsInf, isinf, std::isinf)
     JKMATHPARSER_DEFINE_1PARAM_NUM2BOOL_FUNC(fIsFinite, isfinite, std::isfinite)
-    JKMATHPARSER_DEFINE_1PARAM_NUM2BOOL_FUNC(fIsFloatOK, isnumok, statisticsFloatIsOK)
+    JKMATHPARSER_DEFINE_1PARAM_NUM2BOOL_FUNC(fIsFloatOK, isnumok, JKMP_FloatIsOK)
 
     JKMP::string ptosystempathseparator(const JKMP::string& param);
     JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fToSystemPathSeparator,tosystempathseparator, ptosystempathseparator )
 
-    JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC(fFaddeevaRealW, faddeeva_real, qfFaddeevaRealW)
-    JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC(fFactorial, factorial, qfFactorial)
-    JKMATHPARSER_DEFINE_2PARAM12VEC_NUMERIC_FUNC(fBinom, binom, qfBinomialCoefficient)
-    JKMATHPARSER_DEFINE_2PARAM1VEC_NUMERIC_FUNC(fPoissonPDF, poissonpdf, qfPoissonDist)
-    JKMATHPARSER_DEFINE_3PARAM1VEC_NUMERIC_FUNC(fBinomialPDF, binomialpdf, qfBinomialDist)
-    JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC(fSinc, sinc, qfSinc)
-    JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC(fTanc, tanc, qfTanc)
+    JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC(fFactorial, factorial, JKMP::factorial)
+    JKMATHPARSER_DEFINE_2PARAM12VEC_NUMERIC_FUNC(fBinom, binom, JKMP::binomialCoefficient)
+    JKMATHPARSER_DEFINE_2PARAM1VEC_NUMERIC_FUNC(fPoissonPDF, poissonpdf, JKMP::poissonDist)
+    JKMATHPARSER_DEFINE_3PARAM1VEC_NUMERIC_FUNC(fBinomialPDF, binomialpdf, JKMP::binomialDist)
+    JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC(fSinc, sinc, JKMP::sinc)
+    JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC(fTanc, tanc, JKMP::tanc)
     JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC_SIMPLE(fSin, sin)
     JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC_SIMPLE(fCos, cos)
     JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC_SIMPLE(fTan, tan)
@@ -65,7 +67,7 @@ namespace JKMathParser_DefaultLib {
     JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC_SIMPLE(fLog2, log2)
     JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC_SIMPLE(fSqrt, sqrt)
     JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC_SIMPLE(fCbrt, cbrt)
-    JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC_SIMPLE(fSqr, qfSqr)
+    JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC_SIMPLE(fSqr, JKMP::sqr)
     JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC(fAbs, abs, fabs)
     JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC_SIMPLE(fASin, asin)
     JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC_SIMPLE(fACos, acos)
@@ -88,18 +90,18 @@ namespace JKMathParser_DefaultLib {
     JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC_SIMPLE(fFloor, floor)
     JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC_SIMPLE(fTrunc, trunc)
     JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC_SIMPLE(fRound, round)
-    JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC(fTheta, theta, qfTheta)
-    JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC(fSigmoid, sigmoid, qfSigmoid)
-    JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC(fSign, sign, qfSign)
-    JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC(fDegToRad, deg2rad, qfDegToRad)
-    JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC(fRadToDeg, rad2deg, qfRadToDeg)
-    JKMATHPARSER_DEFINE_2PARAM1NUM2VEC_VECTONUM_FUNC(fPolynom, polyval, qfEvalPolynomial)
-    JKMATHPARSER_DEFINE_1PARAM_NUMERICVEC_FUNC(fDerivPolynom, polyder, qfDerivePolynomial)
+    JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC(fTheta, theta, JKMP::theta)
+    JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC(fSigmoid, sigmoid, JKMP::sigmoid)
+    JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC(fSign, sign, JKMP::sign)
+    JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC(fDegToRad, deg2rad, JKMP::degToRad)
+    JKMATHPARSER_DEFINE_1PARAM_NUMERIC_FUNC(fRadToDeg, rad2deg, JKMP::radToDeg)
+    JKMATHPARSER_DEFINE_2PARAM1NUM2VEC_VECTONUM_FUNC(fPolynom, polyval, JKMP::evalPolynomial)
+    JKMATHPARSER_DEFINE_1PARAM_NUMERICVEC_FUNC(fDerivPolynom, polyder, JKMP::derivePolynomial)
 
     template <class T>
     inline T JKMathParser_sort(const T& value) {
         T m=value;
-        qSort(m);
+        std::sort(m.begin(), m.end());
         return m;
     }
 
@@ -113,18 +115,18 @@ namespace JKMathParser_DefaultLib {
 
     static inline JKMP::vector<double> JKMathParser_dsort(const JKMP::vector<double>& value) {
         JKMP::vector<double> m=value;
-        qSort(m.begin(), m.end(), compareGreaterThan<double>);
+        std::sort(m.begin(), m.end(), compareGreaterThan<double>);
         return m;
     }
 
     static inline JKMP::vector<bool> JKMathParser_dsort(const JKMP::vector<bool>& value) {
         JKMP::vector<bool> m=value;
-        qSort(m.begin(), m.end(), compareGreaterThan<bool>);
+        std::sort(m.begin(), m.end(), compareGreaterThan<bool>);
         return m;
     }
     static inline JKMP::stringVector JKMathParser_dsort(const JKMP::stringVector& value) {
         JKMP::stringVector m=value;
-        qSort(m.begin(), m.end(), compareGreaterThan<JKMP::string>);
+        std::sort(m.begin(), m.end(), compareGreaterThan<JKMP::string>);
         return m;
     }
 
@@ -196,30 +198,29 @@ namespace JKMathParser_DefaultLib {
     void fRepeat(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p);
     void fRepeatString(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p);
 
-    JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_FUNC(fMean, mean, qfstatisticsAverage)
+    JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_CFUNC(fMean, mean, statisticsAverage)
 
-    JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_FUNC(fSkewness, skewness, qfstatisticsSkewness)
-    JKMATHPARSER_DEFINE_2PARAM1VEC_VECTONUM_FUNC(fCentralMoment, moment, qfstatisticsCentralMoment)
-    JKMATHPARSER_DEFINE_2PARAM1VEC_VECTONUM_FUNC(fNonCentralMoment, ncmoment, qfstatisticsMoment)
-    JKMATHPARSER_DEFINE_2PARAM2VEC_VECTONUM_FUNC(fCorrcoeff, corrcoeff, qfstatisticsCorrCoeff)
-    JKMATHPARSER_DEFINE_2PARAM2VEC_VECTONUM_FUNC(fMandersOverlapCoeff, mandersoverlap, qfstatisticsMandersOverlapCoeff)
+    JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_CFUNC(fSkewness, skewness, statisticsSkewness)
+    JKMATHPARSER_DEFINE_2PARAM1VEC_VECTONUM_CFUNC(fCentralMoment, moment, statisticsCentralMoment)
+    JKMATHPARSER_DEFINE_2PARAM1VEC_VECTONUM_CFUNC(fNonCentralMoment, ncmoment, statisticsMoment)
+    JKMATHPARSER_DEFINE_2PARAM2VEC_VECTONUM_CFUNC_1N(fCorrcoeff, corrcoeff, statisticsCorrelationCoefficient)
+    JKMATHPARSER_DEFINE_2PARAM2VEC_VECTONUM_CFUNC_1N(fMandersOverlapCoeff, mandersoverlap, statisticsMandersOverlapCoefficient)
 
-    JKMATHPARSER_DEFINE_1PARAM_NUMERICVEC_FUNC(fDiff, diff, qfstatisticsDiff)
-    JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_FUNC(fSum, sum, qfstatisticsSum)
-    //JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_FUNC(fCount, count, qfstatisticsCount)
-    JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_FUNC(fProd, prod, qfstatisticsProd)
-    JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_FUNC(fSum2, sum2, qfstatisticsSum2)
-    JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_FUNC(fVar, var, qfstatisticsVariance)
-    JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_FUNC(fStd, std, qfstatisticsStd)
-    JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_FUNC(fMedian, median, qfstatisticsMedian)
-    JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_FUNC(fMAD, mad, qfstatisticsMADS)
-    JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_FUNC(fNMAD, nmad, qfstatisticsNMADS)
-    JKMATHPARSER_DEFINE_2PARAM1VEC_VECTONUM_FUNC(fQuantile, quantile, qfstatisticsQuantile)
-    JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_FUNC(fQuantile25, quantile25, qfstatisticsQuantile25)
-    JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_FUNC(fQuantile75, quantile75, qfstatisticsQuantile75)
+    JKMATHPARSER_DEFINE_1PARAM_NUMERICVEC_FUNC(fDiff, diff, statisticsDiff)
+    JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_CFUNC(fSum, sum, statisticsSum)
+    JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_CFUNC(fProd, prod, statisticsProd)
+    JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_CFUNC(fSum2, sum2, statisticsSum2)
+    JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_CFUNC(fVar, var, statisticsVariance)
+    JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_CFUNC(fStd, std, statisticsStdDev)
+    JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_CFUNC(fMedian, median, statisticsMedian)
+    JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_CFUNC(fMAD, mad, statisticsMAD)
+    JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_CFUNC(fNMAD, nmad, statisticsNMAD)
+    JKMATHPARSER_DEFINE_2PARAM1VEC_VECTONUM_CFUNC(fQuantile, quantile, statisticsQuantile)
+    JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_CFUNC(fQuantile25, quantile25, statisticsQuantile25)
+    JKMATHPARSER_DEFINE_1PARAM_VECORNUMSTONUM_CFUNC(fQuantile75, quantile75, statisticsQuantile75)
 
-    JKMATHPARSER_DEFINE_1PARAM_NUMERICVEC_FUNC(fCumSum, cumsum, qfstatisticsCumSum)
-    JKMATHPARSER_DEFINE_1PARAM_NUMERICVEC_FUNC(fCumProd, cumprod, qfstatisticsCumProd)
+    JKMATHPARSER_DEFINE_1PARAM_NUMERICVEC_FUNC(fCumSum, cumsum, statisticsCumSum)
+    JKMATHPARSER_DEFINE_1PARAM_NUMERICVEC_FUNC(fCumProd, cumprod, statisticsCumProd)
 
     JKMATHPARSER_DEFINE_2PARAM2VEC_NUMERIC_FUNC_SIMPLE(fYn, yn)
     JKMATHPARSER_DEFINE_2PARAM2VEC_NUMERIC_FUNC_SIMPLE(fJn, jn)
@@ -230,71 +231,40 @@ namespace JKMathParser_DefaultLib {
         return yn(a,b);
     }
 
-    JKMATHPARSER_DEFINE_2PARAM1VEC_NUMERIC_FUNC(fSlit, slit, qfSlit)
+    JKMATHPARSER_DEFINE_2PARAM1VEC_NUMERIC_FUNC(fSlit, slit, JKMP::slit)
     JKMATHPARSER_DEFINE_2PARAM12VEC_NUMERIC_FUNC_SIMPLE(fFMod, fmod)
     JKMATHPARSER_DEFINE_2PARAM12VEC_NUMERIC_FUNC_SIMPLE(fATan2, atan2)
-    JKMATHPARSER_DEFINE_2PARAM1VEC_NUMERIC_FUNC(fGauss, gaussnn, qfGaussSqrtE)
-    JKMATHPARSER_DEFINE_2PARAM1VEC_NUMERIC_FUNC(fGaussDist, gauss, qfGaussNormSqrtE)
-    JKMATHPARSER_DEFINE_2PARAM1VEC_NUMERIC_FUNC(fRoundSig, roundsig, roundError)
+    JKMATHPARSER_DEFINE_2PARAM1VEC_NUMERIC_FUNC(fGauss, gaussnn, JKMP::gaussSqrtE)
+    JKMATHPARSER_DEFINE_2PARAM1VEC_NUMERIC_FUNC(fGaussDist, gauss, JKMP::gaussNormSqrtE)
+    JKMATHPARSER_DEFINE_2PARAM1VEC_NUMERIC_FUNC(fRoundSig, roundsig, JKMP::roundError)
 
     static inline JKMP::string JKMathParser_trimm(const JKMP::string& value) {
         return value.trimmed();
-    }
-    static inline JKMP::string JKMathParser_simplify(const JKMP::string& value) {
-        return value.simplified();
-    }
-    static inline JKMP::string JKMathParser_tolower(const JKMP::string& value) {
-        return value.toLower();
-    }
-    static inline JKMP::string JKMathParser_toupper(const JKMP::string& value) {
-        return value.toUpper();
     }
     void fPrintExpression(jkmpResult& r,  JKMathParser::jkmpNode** params, unsigned int n, JKMathParser* p);
     void fPrintExpressionTree(jkmpResult& r,  JKMathParser::jkmpNode** params, unsigned int n, JKMathParser* p);
 
     JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fTrimm, trimm, JKMathParser_trimm)
-    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fSimplify, simplify, JKMathParser_simplify)
-    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fToLower, tolower, JKMathParser_tolower)
-    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fToUpper, toupper, JKMathParser_toupper)
+    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fToLower, tolower, JKMP::tolower)
+    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fToUpper, toupper, JKMP::toupper)
 
-    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fReadFile, readfile, readFile)
-    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fescapify, escapify, escapify)
-    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fdeescapify, deescapify, deescapify)
-    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fcleanStringForFilename, clean_string_for_filename, cleanStringForFilename)
+    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fReadFile, readfile, JKMP::readFile)
+    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fescapify, escapify, JKMP::escapify)
+    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fdeescapify, deescapify, JKMP::deescapify)
 
 
-    static inline JKMP::string JKMathParser_extractfilename(const JKMP::string& value) {
-        return QFileInfo(value).fileName();
-    }
-    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fextractfilename, extract_filename, JKMathParser_extractfilename)
-    static inline JKMP::string JKMathParser_extractfilepath(const JKMP::string& value) {
-        return QFileInfo(value).path();
-    }
-    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fextractfilepath, extract_file_path, JKMathParser_extractfilepath)
+    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fextractfilename, extract_filename, JKMP::extract_file_name)
+    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fextractfilepath, extract_file_path, JKMP::extract_file_path)
     static inline JKMP::string JKMathParser_extractfileabspath(const JKMP::string& value) {
-        return QFileInfo(value).absolutePath();
+        return JKMP::extract_file_path(JKMP::get_full_filename(value));
     }
     JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fextractfileabspath, extract_absolute_path, JKMathParser_extractfileabspath)
-    static inline JKMP::string JKMathParser_extractfileabsfilepath(const JKMP::string& value) {
-        return QFileInfo(value).absoluteFilePath();
-    }
-    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fextractfileabsfilepath, extract_absolute_file_path, JKMathParser_extractfileabsfilepath)
-    static inline JKMP::string JKMathParser_extractfileext(const JKMP::string& value) {
-        return QFileInfo(value).suffix();
-    }
-    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fextractfileext, extract_ext, JKMathParser_extractfileext)
-    static inline JKMP::string JKMathParser_extractfilefullext(const JKMP::string& value) {
-        return QFileInfo(value).completeSuffix();
-    }
-    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fextractfilefullext, extract_complete_ext, JKMathParser_extractfilefullext)
+    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fextractfileabsfilepath, extract_absolute_file_path, JKMP::get_full_filename)
+    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fextractfileext, extract_ext, JKMP::extract_file_ext)
     static inline JKMP::string JKMathParser_extractfilebasename(const JKMP::string& value) {
-        return QFileInfo(value).baseName();
+        return value.substr(0, value.size()-(JKMP::extract_file_ext(value).size()+1));
     }
     JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fextractfilebasename, extract_basename, JKMathParser_extractfilebasename)
-    static inline JKMP::string JKMathParser_extractfilefullbasename(const JKMP::string& value) {
-        return QFileInfo(value).completeBaseName();
-    }
-    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fextractfilefullbasenam, extract_complete_basename, JKMathParser_extractfilefullbasename)
 
     jkmpResult fSRand(const jkmpResult* params, unsigned int  n, JKMathParser* p);
 
@@ -426,50 +396,50 @@ namespace JKMathParser_DefaultLib {
     jkmpResult fRunningAverage(const jkmpResult* params, unsigned int  n, JKMathParser* p);
     void fTrapz(jkmpResult& res, const jkmpResult* params, unsigned int  n, JKMathParser* p);
 
-    void fRegExpCapture(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p, bool minimal, Qt::CaseSensitivity casesens);
+    void fRegExpCapture(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p, bool minimal, bool casesens);
 
     inline void fRegExpCaptureMCS(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p) {
-        fRegExpCapture(r, params, n, p, true, Qt::CaseSensitive);
+        fRegExpCapture(r, params, n, p, true, true);
     }
     inline void fRegExpCaptureMNCS(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p) {
-        fRegExpCapture(r, params, n, p, true, Qt::CaseInsensitive);
+        fRegExpCapture(r, params, n, p, true, false);
     }
     inline void fRegExpCaptureCS(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p) {
-        fRegExpCapture(r, params, n, p, false, Qt::CaseSensitive);
+        fRegExpCapture(r, params, n, p, false, true);
     }
     inline void fRegExpCaptureNCS(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p) {
-        fRegExpCapture(r, params, n, p, false, Qt::CaseInsensitive);
+        fRegExpCapture(r, params, n, p, false, false);
     }
 
 
-    void fRegExpContains(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p, bool minimal, Qt::CaseSensitivity casesens);
+    void fRegExpContains(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p, bool minimal, bool casesens);
 
     inline void fRegExpContainsMCS(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p) {
-        fRegExpContains(r, params, n, p, true, Qt::CaseSensitive);
+        fRegExpContains(r, params, n, p, true, true);
     }
     inline void fRegExpContainsMNCS(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p) {
-        fRegExpContains(r, params, n, p, true, Qt::CaseInsensitive);
+        fRegExpContains(r, params, n, p, true, false);
     }
     inline void fRegExpContainsCS(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p) {
-        fRegExpContains(r, params, n, p, false, Qt::CaseSensitive);
+        fRegExpContains(r, params, n, p, false, true);
     }
     inline void fRegExpContainsNCS(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p) {
-        fRegExpContains(r, params, n, p, false, Qt::CaseInsensitive);
+        fRegExpContains(r, params, n, p, false, false);
     }
 
-    void fRegExpIndexIn(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p, bool minimal, Qt::CaseSensitivity casesens);
+    void fRegExpIndexIn(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p, bool minimal, bool casesens);
 
     inline void fRegExpIndexInMCS(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p) {
-        fRegExpIndexIn(r, params, n, p, true, Qt::CaseSensitive);
+        fRegExpIndexIn(r, params, n, p, true, true);
     }
     inline void fRegExpIndexInMNCS(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p) {
-        fRegExpIndexIn(r, params, n, p, true, Qt::CaseInsensitive);
+        fRegExpIndexIn(r, params, n, p, true, false);
     }
     inline void fRegExpIndexInCS(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p) {
-        fRegExpIndexIn(r, params, n, p, false, Qt::CaseSensitive);
+        fRegExpIndexIn(r, params, n, p, false, true);
     }
     inline void fRegExpIndexInNCS(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p) {
-        fRegExpIndexIn(r, params, n, p, false, Qt::CaseInsensitive);
+        fRegExpIndexIn(r, params, n, p, false, false);
     }
 
     void fDateNum(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p);
