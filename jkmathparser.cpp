@@ -274,21 +274,21 @@ void JKMathParser::addGlobalVariable(const JKMP::string &name, bool value)
 
 
 
-char JKMathParser::peekStream(std::istream *stream)
+JKMP::charType JKMathParser::peekStream(std::istream *stream)
 {
-    if (!stream) return char(0);
+    if (!stream) return JKMP::charType(0);
     return stream->peek();
 }
 
-void JKMathParser::putbackStream(std::istream *stream, char ch)
+void JKMathParser::putbackStream(std::istream *stream, JKMP::charType ch)
 {
     if (ch!=0 && stream) stream->putback(ch);
 }
 
-bool JKMathParser::getFromStream(std::istream *stream, char &c)
+bool JKMathParser::getFromStream(std::istream *stream, JKMP::charType &c)
 {
     if (!stream) return false;
-    c=char(0);
+    c=JKMP::charType(0);
     if (stream->eof()) {
         //qDebug()<<"read "<<c<<": false";
         return false;
@@ -385,7 +385,7 @@ void JKMathParser::addFunction(const JKMP::string &name, JKMathParser::jkmpEvalu
 
 
 JKMathParser::jkmpTokenType JKMathParser::getToken(){
-    char ch=0;
+    JKMP::charType ch=0;
     while(getFromStream(program, ch) && std::isspace(ch)) {
 		;
 	}
@@ -406,7 +406,7 @@ JKMathParser::jkmpTokenType JKMathParser::getToken(){
             return CurrentToken=MUL;
             break;
         case '/':{
-                char ch1=0;
+                JKMP::charType ch1=0;
                 if (program) getFromStream(program, ch1);
                 if (ch1=='/') {
                     eatSinglelineComment();
@@ -447,7 +447,7 @@ JKMathParser::jkmpTokenType JKMathParser::getToken(){
         case '~':
             return CurrentToken=TILDE;
         case '!':{
-            char ch1=0;
+            JKMP::charType ch1=0;
             if (program) getFromStream(program, ch1);
 			if (ch1=='=') return CurrentToken=COMP_UNEQUAL;
 			// else
@@ -455,7 +455,7 @@ JKMathParser::jkmpTokenType JKMathParser::getToken(){
 			return CurrentToken=FACTORIAL_LOGIC_NOT;
 		}
 		case '&':{
-            char ch1=0;
+            JKMP::charType ch1=0;
             if (program) getFromStream(program, ch1);
 			if (ch1=='&') return CurrentToken=LOGIC_AND;
 			// else
@@ -465,7 +465,7 @@ JKMathParser::jkmpTokenType JKMathParser::getToken(){
             break;
 		}
 		case '|':{
-            char ch1=0;
+            JKMP::charType ch1=0;
             if (program) getFromStream(program, ch1);
 			if (ch1=='|') return CurrentToken=LOGIC_OR;
 			// else
@@ -475,7 +475,7 @@ JKMathParser::jkmpTokenType JKMathParser::getToken(){
             break;
 		}
 		case '=':{
-            char ch1=0;
+            JKMP::charType ch1=0;
             if (program) getFromStream(program, ch1);
 			if (ch1=='=') return CurrentToken=COMP_EQUALT;
 			// else
@@ -483,7 +483,7 @@ JKMathParser::jkmpTokenType JKMathParser::getToken(){
 			return CurrentToken=ASSIGN;
 		}
 		case '>':{
-            char ch1=0;
+            JKMP::charType ch1=0;
             if (program) getFromStream(program, ch1);
 			if (ch1=='=') return CurrentToken=COMP_GEQUAL;
 			// else
@@ -491,7 +491,7 @@ JKMathParser::jkmpTokenType JKMathParser::getToken(){
 			return CurrentToken=COMP_GREATER;
 		}
 		case '<':{
-            char ch1=0;
+            JKMP::charType ch1=0;
             if (program) getFromStream(program, ch1);
 			if (ch1=='=') return CurrentToken=COMP_SEQUAL;
 			// else
@@ -544,7 +544,7 @@ JKMathParser::jkmpTokenType JKMathParser::getToken(){
 			}
 			// the parser has found an unknown token. an exception will be thrown
 			//std::cout<<StringValue<<",   "<<ch<<std::endl;
-            jkmpError(JKMP::string("get_next_token: unknown token currentCharacter='%1', currentString='%2'").arg(JKMP::chartostr(ch)).arg(StringValue));
+            jkmpError(JKMP::string("get_next_token: unknown token currentCharacter='%1', currentString='%2'").arg(JKMP::charToStr(ch)).arg(StringValue));
             break;
 	}
     return END;
@@ -552,9 +552,9 @@ JKMathParser::jkmpTokenType JKMathParser::getToken(){
 
 void JKMathParser::eatMultilineComment()
 {
-    char ch1=0;
-    char ch2=0;
-    char ch=0;
+    JKMP::charType ch1=0;
+    JKMP::charType ch2=0;
+    JKMP::charType ch=0;
     while(getFromStream(program, ch)) {
         ch1=ch2;
         ch2=ch;
@@ -566,14 +566,14 @@ void JKMathParser::eatMultilineComment()
 
 void JKMathParser::eatSinglelineComment()
 {
-    char ch=0;
+    JKMP::charType ch=0;
     while(getFromStream(program, ch) && ch!='\n') {
         ;
     }
 }
 
 
-JKMathParser::jkmpNode* JKMathParser::parse(std::string prog){
+JKMathParser::jkmpNode* JKMathParser::parse(JKMP::stringType prog){
     progStr=prog;
     program=new std::istringstream(progStr);
     JKMathParser::jkmpNode* res=NULL;
@@ -601,7 +601,7 @@ JKMathParser::jkmpNode* JKMathParser::parse(std::string prog){
     }
 }
 
-jkmpResult JKMathParser::evaluate(std::string prog) {
+jkmpResult JKMathParser::evaluate(JKMP::stringType prog) {
     JKMathParser::jkmpNode* res=parse(prog);
     jkmpResult r;
     res->evaluate(r);
@@ -1154,7 +1154,7 @@ double JKMathParser::readNumber()
 
 
   int i=0;
-  char c;
+  JKMP::charType c;
 
   if (getFromStream(program, c)) {
    // check sign
@@ -1188,7 +1188,7 @@ double JKMathParser::readDec()
 
   JKMP::string num="";
   int i=0;
-  char c;
+  JKMP::charType c;
 
   if (getFromStream(program, c)) {
    // check sign
@@ -1286,7 +1286,7 @@ double JKMathParser::readDec()
   }
 
     if (num.length()<=0) num="0";
-    current_double = JKMP::stringtofloat(num);
+    current_double = JKMP::strToFloat(num);
     current_double=(current_double)*dfactor;
     return current_double;
 }
@@ -1298,7 +1298,7 @@ double JKMathParser::readHex() {
 
     JKMP::string num="";
     int i=0;
-    char c;
+    JKMP::charType c;
 
     if (getFromStream(program, c)) {
         // check sign
@@ -1345,7 +1345,7 @@ double JKMathParser::readHex() {
     }
 
       if (num.length()<=0) num="0";
-      current_double=JKMP::hextoint(num);
+      current_double=JKMP::hexToInt(num);
       current_double=(current_double)*dfactor;
       return current_double;
 }
@@ -1357,7 +1357,7 @@ double JKMathParser::readOct() {
 
     JKMP::string num="";
     int i=0;
-    char c;
+    JKMP::charType c;
 
     if (getFromStream(program, c)) {
         // check sign
@@ -1393,7 +1393,7 @@ double JKMathParser::readOct() {
     }
 
       if (num.length()<=0) num="0";
-      current_double=JKMP::octtoint(num);
+      current_double=JKMP::octToInt(num);
       current_double=(current_double)*dfactor;
       return current_double;
 }
@@ -1406,7 +1406,7 @@ double JKMathParser::readBin() {
 
   JKMP::string num="";
   int i=0;
-  char c;
+  JKMP::charType c;
 
   if (getFromStream(program, c)) {
       // check sign
@@ -1450,13 +1450,13 @@ double JKMathParser::readBin() {
     return current_double;
 }
 
-JKMP::string JKMathParser::readDelim(char delimiter){
+JKMP::string JKMathParser::readDelim(JKMP::charType delimiter){
     JKMP::string res="";
-    char ch=0;
+    JKMP::charType ch=0;
 
     while(getFromStream(program, ch)) {
 		if (ch==delimiter ) {
-            char ch1=peekStream(program);
+            JKMP::charType ch1=peekStream(program);
 		    if (ch1==delimiter) {
                     getFromStream(program, ch);
 		            res=res+delimiter;
@@ -1464,7 +1464,7 @@ JKMP::string JKMathParser::readDelim(char delimiter){
                 break;
             }
         } else if (ch=='\\')  {
-            char ch1=peekStream(program);
+            JKMP::charType ch1=peekStream(program);
             if (ch1=='\"') {
                 getFromStream(program, ch);
                 res=res+"\"";
@@ -1507,7 +1507,7 @@ JKMP::string JKMathParser::readDelim(char delimiter){
 
 
 
-JKMathParser::jkmpUnaryNode::jkmpUnaryNode(char op, JKMathParser::jkmpNode* c, JKMathParser* p, JKMathParser::jkmpNode* par):
+JKMathParser::jkmpUnaryNode::jkmpUnaryNode(JKMP::charType op, JKMathParser::jkmpNode* c, JKMathParser* p, JKMathParser::jkmpNode* par):
     jkmpNode(p, par)
 {
   child=c;
@@ -1603,7 +1603,7 @@ JKMP::string JKMathParser::jkmpUnaryNode::print() const
 
 JKMP::string JKMathParser::jkmpUnaryNode::printTree(int level) const
 {
-    return JKMP::string(2*level, char(' '))+JKMP::string("UnaryNode %2\n%1").arg(child->printTree(level+1)).arg(JKMP::string(operation));
+    return JKMP::string(2*level, JKMP::charType(' '))+JKMP::string("UnaryNode %2\n%1").arg(child->printTree(level+1)).arg(JKMP::string(operation));
 }
 
 
@@ -1612,7 +1612,7 @@ JKMP::string JKMathParser::jkmpUnaryNode::printTree(int level) const
 
 
 
-JKMathParser::jkmpBinaryArithmeticNode::jkmpBinaryArithmeticNode(char op, JKMathParser::jkmpNode* l, JKMathParser::jkmpNode* r, JKMathParser* p, JKMathParser::jkmpNode* par):
+JKMathParser::jkmpBinaryArithmeticNode::jkmpBinaryArithmeticNode(JKMP::charType op, JKMathParser::jkmpNode* l, JKMathParser::jkmpNode* r, JKMathParser* p, JKMathParser::jkmpNode* par):
     jkmpNode(p, par)
 {
   left=l;
@@ -1729,7 +1729,7 @@ JKMP::string JKMathParser::jkmpBinaryArithmeticNode::print() const
 
 JKMP::string JKMathParser::jkmpBinaryArithmeticNode::printTree(int level) const
 {
-    return JKMP::string(2*level, char(' '))+JKMP::string("BinaryArithmeticNode %2\n%1\n%3").arg(left->printTree(level+1)).arg(JKMP::string(operation)).arg(right->printTree(level+1));
+    return JKMP::string(2*level, JKMP::charType(' '))+JKMP::string("BinaryArithmeticNode %2\n%1\n%3").arg(left->printTree(level+1)).arg(JKMP::string(operation)).arg(right->printTree(level+1));
 }
 
 
@@ -1738,7 +1738,7 @@ JKMP::string JKMathParser::jkmpBinaryArithmeticNode::printTree(int level) const
 
 
 
-JKMathParser::jkmpCompareNode::jkmpCompareNode(char op, JKMathParser::jkmpNode* l, JKMathParser::jkmpNode* r, JKMathParser* p, JKMathParser::jkmpNode* par):
+JKMathParser::jkmpCompareNode::jkmpCompareNode(JKMP::charType op, JKMathParser::jkmpNode* l, JKMathParser::jkmpNode* r, JKMathParser* p, JKMathParser::jkmpNode* par):
     jkmpNode(p, par)
 {
   left=l;
@@ -1855,7 +1855,7 @@ JKMP::string JKMathParser::jkmpCompareNode::print() const
 
 JKMP::string JKMathParser::jkmpCompareNode::printTree(int level) const
 {
-    return JKMP::string(2*level, char(' '))+JKMP::string("CompareNode %2\n%1\n%3").arg(left->printTree(level+1)).arg(opAsString()).arg(right->printTree(level+1));
+    return JKMP::string(2*level, JKMP::charType(' '))+JKMP::string("CompareNode %2\n%1\n%3").arg(left->printTree(level+1)).arg(opAsString()).arg(right->printTree(level+1));
 }
 
 JKMP::string JKMathParser::jkmpCompareNode::opAsString() const
@@ -1893,7 +1893,7 @@ JKMP::string JKMathParser::jkmpCompareNode::opAsString() const
 
 
 
-JKMathParser::jkmpBinaryBoolNode::jkmpBinaryBoolNode(char op, JKMathParser::jkmpNode* l, JKMathParser::jkmpNode* r, JKMathParser* p, JKMathParser::jkmpNode* par):
+JKMathParser::jkmpBinaryBoolNode::jkmpBinaryBoolNode(JKMP::charType op, JKMathParser::jkmpNode* l, JKMathParser::jkmpNode* r, JKMathParser* p, JKMathParser::jkmpNode* par):
     jkmpNode(p, par)
 {
   left=l;
@@ -1997,7 +1997,7 @@ JKMP::string JKMathParser::jkmpBinaryBoolNode::print() const
 
 JKMP::string JKMathParser::jkmpBinaryBoolNode::printTree(int level) const
 {
-    return JKMP::string(2*level, char(' '))+JKMP::string("BinaryBoolNode %2\n%1\n%3").arg(left->printTree(level+1)).arg(opAsString()).arg(right->printTree(level+1));
+    return JKMP::string(2*level, JKMP::charType(' '))+JKMP::string("BinaryBoolNode %2\n%1\n%3").arg(left->printTree(level+1)).arg(opAsString()).arg(right->printTree(level+1));
 }
 
 JKMP::string JKMathParser::jkmpBinaryBoolNode::opAsString() const
@@ -2096,7 +2096,7 @@ JKMP::string JKMathParser::jkmpVariableNode::print() const
 
 JKMP::string JKMathParser::jkmpVariableNode::printTree(int level) const
 {
-    return JKMP::string(2*level, char(' '))+JKMP::string("VariableNode '%1'").arg(var);
+    return JKMP::string(2*level, JKMP::charType(' '))+JKMP::string("VariableNode '%1'").arg(var);
 }
 
 
@@ -2221,7 +2221,7 @@ JKMP::string JKMathParser::jkmpNodeList::printTree(int level) const
             sl<<list[i]->printTree(level+1);
         }
     }
-    return JKMP::string(2*level, char(' '))+JKMP::string("NodeList\n%1").arg(sl.join("\n"));
+    return JKMP::string(2*level, JKMP::charType(' '))+JKMP::string("NodeList\n%1").arg(sl.join("\n"));
 }
 
 JKMathParser::jkmpNodeList::jkmpNodeList(JKMathParser *p, JKMathParser::jkmpNode *par):
@@ -2325,7 +2325,7 @@ JKMP::string JKMathParser::jkmpVariableAssignNode::print() const
 
 JKMP::string JKMathParser::jkmpVariableAssignNode::printTree(int level) const
 {
-    return JKMP::string(2*level, char(' '))+JKMP::string("VariableAssigneNode '%2'\n%1").arg(child->printTree(level+1)).arg(variable);
+    return JKMP::string(2*level, JKMP::charType(' '))+JKMP::string("VariableAssigneNode '%2'\n%1").arg(child->printTree(level+1)).arg(variable);
 }
 
 JKMathParser::jkmpFunctionNode::jkmpFunctionNode(JKMP::string name, JKMP::vector<jkmpNode *> params, JKMathParser *p, jkmpNode *par):
@@ -2443,8 +2443,8 @@ JKMP::string JKMathParser::jkmpFunctionNode::printTree(int level) const
             sl<<child[i]->printTree(level+1);
         }
     }
-    if (child.size()>0) return JKMP::string(2*level, char(' '))+JKMP::string("FunctionNode '%1(...)'\n%2").arg(fun).arg(sl.join("\n"));
-    else return JKMP::string(2*level, char(' '))+JKMP::string("FunctionNode '%1()'").arg(fun);
+    if (child.size()>0) return JKMP::string(2*level, JKMP::charType(' '))+JKMP::string("FunctionNode '%1(...)'\n%2").arg(fun).arg(sl.join("\n"));
+    else return JKMP::string(2*level, JKMP::charType(' '))+JKMP::string("FunctionNode '%1()'").arg(fun);
 }
 
 
@@ -3208,8 +3208,8 @@ JKMP::string JKMathParser::jkmpFunctionAssignNode::print() const
 
 JKMP::string JKMathParser::jkmpFunctionAssignNode::printTree(int level) const
 {
-    if (child) return JKMP::string(2*level, char(' '))+JKMP::string("FunctionAssigneNode '%2(%3)'\n%1").arg(child->printTree(level+1)).arg(function).arg(parameterNames.join(", "));
-    else return JKMP::string(2*level, char(' '))+JKMP::string("FunctionAssigneNode '%1(%2)'").arg(function).arg(parameterNames.join(", "));
+    if (child) return JKMP::string(2*level, JKMP::charType(' '))+JKMP::string("FunctionAssigneNode '%2(%3)'\n%1").arg(child->printTree(level+1)).arg(function).arg(parameterNames.join(", "));
+    else return JKMP::string(2*level, JKMP::charType(' '))+JKMP::string("FunctionAssigneNode '%1(%2)'").arg(function).arg(parameterNames.join(", "));
 }
 
 jkmpResult JKMathParser::jkmpConstantNode::evaluate()
@@ -3247,7 +3247,7 @@ JKMP::string JKMathParser::jkmpConstantNode::print() const
 
 JKMP::string JKMathParser::jkmpConstantNode::printTree(int level) const
 {
-    return JKMP::string(2*level, char(' '))+JKMP::string("ConstantNode %1").arg(data.toTypeString());
+    return JKMP::string(2*level, JKMP::charType(' '))+JKMP::string("ConstantNode %1").arg(data.toTypeString());
 }
 
 jkmpResult JKMathParser::jkmpInvalidNode::evaluate()
@@ -3272,7 +3272,7 @@ JKMP::string JKMathParser::jkmpInvalidNode::print() const
 
 JKMP::string JKMathParser::jkmpInvalidNode::printTree(int level) const
 {
-    return JKMP::string(2*level, char(' '))+JKMP::string("InvalidNode");
+    return JKMP::string(2*level, JKMP::charType(' '))+JKMP::string("InvalidNode");
 }
 
 void JKMathParser::jkmpVectorMatrixConstructionList::evaluate(jkmpResult &res)
@@ -3441,7 +3441,7 @@ JKMP::string JKMathParser::jkmpVectorMatrixConstructionList::printTree(int level
             else sl<<"; ";
         }
     }
-    return JKMP::string(2*level, char(' '))+JKMP::string("VectorMatrixCOnstructionListNode\n%1").arg(sl.join("\n"));
+    return JKMP::string(2*level, JKMP::charType(' '))+JKMP::string("VectorMatrixCOnstructionListNode\n%1").arg(sl.join("\n"));
 
 }
 
@@ -3462,8 +3462,8 @@ JKMP::string JKMathParser::jkmpVectorConstructionNode::print() const
 
 JKMP::string JKMathParser::jkmpVectorConstructionNode::printTree(int level) const
 {
-    if (step)  return JKMP::string(2*level, char(' '))+JKMP::string("VectorConstructionNode:\n%1\n%3\n%2").arg(start->printTree(level+1)).arg(end->printTree(level+1)).arg(step->printTree(level+1));
-    else  return JKMP::string(2*level, char(' '))+JKMP::string("VectorConstructionNode:\n%1\n%2").arg(start->printTree(level+1)).arg(end->printTree(level+1));
+    if (step)  return JKMP::string(2*level, JKMP::charType(' '))+JKMP::string("VectorConstructionNode:\n%1\n%3\n%2").arg(start->printTree(level+1)).arg(end->printTree(level+1)).arg(step->printTree(level+1));
+    else  return JKMP::string(2*level, JKMP::charType(' '))+JKMP::string("VectorConstructionNode:\n%1\n%2").arg(start->printTree(level+1)).arg(end->printTree(level+1));
 
 }
 
@@ -3679,7 +3679,7 @@ JKMP::string JKMathParser::jkmpCasesNode::printTree(int level) const
         sl<<casesNodes[i].second->printTree(level+1);
     }
     if (elseNode) sl<<elseNode->printTree(level+1);
-    return JKMP::string(2*level, char(' '))+JKMP::string("CasesNode\n%1").arg(sl.join("\n"));
+    return JKMP::string(2*level, JKMP::charType(' '))+JKMP::string("CasesNode\n%1").arg(sl.join("\n"));
 
 }
 
@@ -4130,7 +4130,7 @@ JKMP::string JKMathParser::jkmpVectorOperationNode::printTree(int level) const
             sl<<defaultValue->printTree(level+1);
         }
     }
-    return JKMP::string(2*level, char(' '))+JKMP::string("VectorOperationNode %2, %3\n%1\n%4)").arg(sl.join("\n")).arg(operationName).arg(variableName).arg(expression->printTree(level+1));
+    return JKMP::string(2*level, JKMP::charType(' '))+JKMP::string("VectorOperationNode %2, %3\n%1\n%4)").arg(sl.join("\n")).arg(operationName).arg(variableName).arg(expression->printTree(level+1));
 
 
 }
@@ -4346,7 +4346,7 @@ void JKMathParser::jkmpVectorElementAssignNode::evaluate(jkmpResult &res)
              } else if (ii.size()>1 && dat.size()==1) {
                  res.type=jkmpString;
                  res.str.clear();
-                 char t=dat[0];
+                 JKMP::charType t=dat[0];
                  for (size_t i=0; i<ii.size(); i++) {
                      if (ii[i]>=0 && ii[i]<var.str.size()) {
                          var.str[ii[i]]=t;
@@ -4363,7 +4363,7 @@ void JKMathParser::jkmpVectorElementAssignNode::evaluate(jkmpResult &res)
                  res.str.clear();
                  for (size_t i=0; i<ii.size(); i++) {
                      if (ii[i]>=0 && ii[i]<var.str.size()) {
-                         char t=dat[i];
+                         JKMP::charType t=dat[i];
                          var.str[ii[i]]=t;
                          res.str+=t;
                      } else {
@@ -4403,7 +4403,7 @@ JKMP::string JKMathParser::jkmpVectorElementAssignNode::print() const
 
 JKMP::string JKMathParser::jkmpVectorElementAssignNode::printTree(int level) const
 {
-    return JKMP::string(2*level, char(' '))+JKMP::string("VectorElementAssigneNode '%2'\n%1\n%3").arg(index->printTree(level+1)).arg(variable).arg(child->printTree(level+1));
+    return JKMP::string(2*level, JKMP::charType(' '))+JKMP::string("VectorElementAssigneNode '%2'\n%1\n%3").arg(index->printTree(level+1)).arg(variable).arg(child->printTree(level+1));
 }
 
 JKMathParser::jkmpVariableVectorAccessNode::~jkmpVariableVectorAccessNode()
@@ -4670,7 +4670,7 @@ JKMP::string JKMathParser::jkmpVariableVectorAccessNode::print() const
 
 JKMP::string JKMathParser::jkmpVariableVectorAccessNode::printTree(int level) const
 {
-return JKMP::string(2*level, char(' '))+JKMP::string("VariableVectorAccessNode: '%2'\n%1").arg(index->printTree(level+1)).arg(variable);
+return JKMP::string(2*level, JKMP::charType(' '))+JKMP::string("VariableVectorAccessNode: '%2'\n%1").arg(index->printTree(level+1)).arg(variable);
 }
 
 void JKMathParser::jkmpNode::evaluate(jkmpResult &result)
@@ -5244,7 +5244,7 @@ JKMP::string JKMathParser::printBytecode(const JKMathParser::ByteCodeProgram &pr
     JKMP::string res="";
     for (size_t i = 0; i < program.size(); ++i) {
         const ByteCodeInstruction& inst=program[i];
-        res+=JKMP::string("%1: %2\n").arg(JKMP::inttostr(i, 10, char(' '))).arg(printBytecode(inst));
+        res+=JKMP::string("%1: %2\n").arg(JKMP::intToStr(i, 10, JKMP::charType(' '))).arg(printBytecode(inst));
     }
     return res;
 }
@@ -5606,7 +5606,7 @@ JKMP::string JKMathParser::jkmpVectorAccessNode::print() const
 
 JKMP::string JKMathParser::jkmpVectorAccessNode::printTree(int level) const
 {
-    return JKMP::string(2*level, char(' '))+JKMP::string("VectorAccessNode:\n%1\n%2").arg(left->printTree(level+1)).arg(index->printTree(level+1));
+    return JKMP::string(2*level, JKMP::charType(' '))+JKMP::string("VectorAccessNode:\n%1\n%2").arg(left->printTree(level+1)).arg(index->printTree(level+1));
 }
 
 
@@ -5657,7 +5657,7 @@ JKMP::string JKMathParser::jkmpStructAccessNode::print() const
 
 JKMP::string JKMathParser::jkmpStructAccessNode::printTree(int level) const
 {
-    return JKMP::string(2*level, char(' '))+JKMP::string("StructAccessNode '%2':\n%1").arg(left->printTree(level+1)).arg(index);}
+    return JKMP::string(2*level, JKMP::charType(' '))+JKMP::string("StructAccessNode '%2':\n%1").arg(left->printTree(level+1)).arg(index);}
 
 
 void JKMathParser::jkmpListConstruction::evaluate(jkmpResult &res)
@@ -5712,5 +5712,5 @@ JKMP::string JKMathParser::jkmpListConstruction::printTree(int level) const
             sl<<list[i]->printTree(level+1);
         }
     }
-    return JKMP::string(2*level, char(' '))+JKMP::string("ListConstruction\n%1").arg(sl.join("\n"));
+    return JKMP::string(2*level, JKMP::charType(' '))+JKMP::string("ListConstruction\n%1").arg(sl.join("\n"));
 }

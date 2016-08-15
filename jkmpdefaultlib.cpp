@@ -500,7 +500,7 @@ namespace JKMathParser_DefaultLib {
     JKMP::string ptosystempathseparator(const JKMP::string& param) {
         JKMP::string r;
         for (int i=0; i<param.size(); i++) {
-            char ch=param[i];
+            JKMP::charType ch=param[i];
             if (ch=='/' || ch=='\\') ch=JKMP_PATHSEPARATOR_CHAR;
             r+=ch;
         }
@@ -653,7 +653,7 @@ namespace JKMathParser_DefaultLib {
             r.setString(params[0].str);
             for (int i=r.str.size()-1; i>=1; i--) {
                 int j=p->get_rng()->randInt(i);
-                char h=r.str[i];
+                JKMP::charType h=r.str[i];
                 r.str[i]=r.str[j];
                 r.str[j]=h;
             }

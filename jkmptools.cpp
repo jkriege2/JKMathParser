@@ -127,28 +127,25 @@ void jkmpResult::setVoid()
 JKMP::string jkmpResult::toString(int precision) const
 {
     switch(type) {
-        case jkmpDouble: return JKMP::floattostr(num, precision);
-        case jkmpDoubleVector: return JKMP::string("[ ")+doubleVecToJKMP::string(numVec, precision, 'g', '.', ", ")+JKMP::string(" ]");
-        case jkmpDoubleMatrix: return JKMP::string("[ ")+doubleMatrixToJKMP::string(numVec, matrix_columns, precision,'g', '.', ", ", ";\n")+JKMP::string(" ]");
+        case jkmpDouble: return JKMP::floatToStr(num, precision);
+        case jkmpDoubleVector: return JKMP::string("[ ")+JKMP::doubleVecToStr(numVec, precision, ", ")+JKMP::string(" ]");
+        case jkmpDoubleMatrix: return JKMP::string("[ ")+JKMP::doubleMatrixToStr(numVec, matrix_columns, precision, ", ", ";\n")+JKMP::string(" ]");
         case jkmpStringVector: return JKMP::string("[ ")+strVec.join(", ")+JKMP::string(" ]");
-        case jkmpBoolVector: return JKMP::string("[ ")+boolvectorToJKMP::string(boolVec, ", ", " true", "false")+JKMP::string(" ]");
-        case jkmpBoolMatrix: return JKMP::string("[ ")+boolMatrixToJKMP::string(boolVec, matrix_columns, ", ", ";\n", " true", "false")+JKMP::string(" ]");
+        case jkmpBoolVector: return JKMP::string("[ ")+JKMP::boolVecToStr(boolVec, ", ", " true", "false")+JKMP::string(" ]");
+        case jkmpBoolMatrix: return JKMP::string("[ ")+JKMP::boolMatrixToStr(boolVec, matrix_columns, ", ", ";\n", " true", "false")+JKMP::string(" ]");
         case jkmpString: return str;
-        case jkmpBool: return JKMP::booltostr(boolean);
+        case jkmpBool: return JKMP::boolToStr(boolean);
         case jkmpStruct: {
                 JKMP::stringVector sl;
-                JKMP::mapIterator<JKMP::string,jkmpResult> it(structData);
-                while (it.hasNext()) {
-                    it.next();
-                    sl<<JKMP::string("%1: %2").arg(it.key()).arg(it.value().toString(precision));
+                for (auto it=structData.begin(); it!=structData.end(); ++it) {
+                    sl<<JKMP::string("%1: %2").arg(it->first).arg(it->second.toString(precision));
                 }
                 return JKMP::_("{ %1 }").arg(sl.join(", "));
             }
         case jkmpList: {
                 JKMP::stringVector sl;
-                JKMP::vectorIterator<jkmpResult> it(listData);
-                while (it.hasNext()) {
-                    sl<<it.next().toString(precision);
+                for (auto it=listData.begin(); it!=listData.end(); ++it) {
+                    sl<<it->toString(precision);
                 }
                 return JKMP::_("{ %1 }").arg(sl.join(", "));
             }
@@ -162,29 +159,26 @@ JKMP::string jkmpResult::toTypeString(int precision) const
 {
     if (!isValid) return JKMP::_("[INVALID]");
     switch(type) {
-        case jkmpDouble: return JKMP::floattostr(num, precision)+JKMP::_(" [number]");
-        case jkmpDoubleVector: return JKMP::string("[ ")+doubleVecToJKMP::string(numVec, precision, 'g', '.', ", ")+JKMP::string(" ] [number vector]");
-        case jkmpDoubleMatrix: return JKMP::string("[ ")+doubleMatrixToJKMP::string(numVec, matrix_columns, precision,'g', '.', ", ", ";\n")+JKMP::string(" ] [number matrix]");
+        case jkmpDouble: return JKMP::floatToStr(num, precision)+JKMP::_(" [number]");
+        case jkmpDoubleVector: return JKMP::string("[ ")+JKMP::doubleVecToStr(numVec, precision, ", ")+JKMP::string(" ] [number vector]");
+        case jkmpDoubleMatrix: return JKMP::string("[ ")+JKMP::doubleMatrixToStr(numVec, matrix_columns, precision, ", ", ";\n")+JKMP::string(" ] [number matrix]");
         case jkmpStringVector: return JKMP::string("[ ")+strVec.join(", ")+JKMP::string(" ] [string vector]");
-        case jkmpBoolVector: return JKMP::string("[ ")+boolvectorToJKMP::string(boolVec, ", ", "true", "false")+JKMP::string(" ] [boolean vector]");
-        case jkmpBoolMatrix: return JKMP::string("[ ")+boolMatrixToJKMP::string(boolVec, matrix_columns, ", ", ";\n", "true", "false")+JKMP::string(" ] [boolean matrix]");
+        case jkmpBoolVector: return JKMP::string("[ ")+JKMP::boolVecToStr(boolVec, ", ", "true", "false")+JKMP::string(" ] [boolean vector]");
+        case jkmpBoolMatrix: return JKMP::string("[ ")+JKMP::boolMatrixToStr(boolVec, matrix_columns, ", ", ";\n", "true", "false")+JKMP::string(" ] [boolean matrix]");
         case jkmpString: return str+JKMP::_(" [string]");
-        case jkmpBool: return JKMP::booltostr(boolean)+JKMP::_(" [bool]");
+        case jkmpBool: return JKMP::boolToStr(boolean)+JKMP::_(" [bool]");
         case jkmpVoid: return JKMP::_(" [void]");
         case jkmpStruct: {
                 JKMP::stringVector sl;
-                JKMP::mapIterator<JKMP::string,jkmpResult> it(structData);
-                while (it.hasNext()) {
-                    it.next();
-                    sl<<JKMP::string("%1: %2").arg(it.key()).arg(it.value().toTypeString(precision));
+                for (auto it=structData.begin(); it!=structData.end(); ++it) {
+                    sl<<JKMP::string("%1: %2").arg(it->first).arg(it->second.toTypeString(precision));
                 }
                 return JKMP::_("{ %1 } [struct]").arg(sl.join(", "));
             }
         case jkmpList: {
                 JKMP::stringVector sl;
-                JKMP::vectorIterator<jkmpResult> it(listData);
-                while (it.hasNext()) {
-                    sl<<it.next().toTypeString(precision);
+                for (auto it=listData.begin(); it!=listData.end(); ++it) {
+                    sl<<it->toTypeString(precision);
                 }
                 return JKMP::_("{ %1 } [list]").arg(sl.join(", "));
             }
@@ -347,7 +341,7 @@ void jkmpResult::setBoolean(bool val)
     isValid=true;
 }
 
-void jkmpResult::setString(const std::string &val)
+void jkmpResult::setString(const JKMP::stringType &val)
 {
     setInvalid();
     type=jkmpString;
@@ -355,7 +349,7 @@ void jkmpResult::setString(const std::string &val)
     isValid=true;
 }
 
-void jkmpResult::setString(int size, char defaultChar)
+void jkmpResult::setString(int size, JKMP::charType defaultChar)
 {
     setInvalid();
     type=jkmpString;
@@ -477,7 +471,7 @@ void jkmpResult::setStringVec(int size, const JKMP::string &defaultVal)
 std::vector<double> jkmpResult::asVector() const
 {
     if (type==jkmpDoubleVector) return numVec;
-    else if (type==jkmpBoolVector) return boolvectorToNumVec(boolVec, 1.0, 0.0);
+    else if (type==jkmpBoolVector) return JKMP::boolvectorToNumVec(boolVec, 1.0, 0.0);
     else if (type==jkmpDouble) return std::vector<double>(1, num);
     else if (type==jkmpList) {
         bool ok=true;
@@ -578,7 +572,7 @@ void jkmpResult::setStruct(const JKMP::map<JKMP::string, jkmpResult> &data)
 jkmpResult jkmpResult::getListItem(int item) const
 {
     if (type==jkmpList) {
-        if (item>=0 && item<listData.size() ) return listData[item];
+        if (item>=0 && static_cast<size_t>(item)<listData.size() ) return listData[item];
     }
     return jkmpResult::invalidResult();
 }
@@ -586,14 +580,14 @@ jkmpResult jkmpResult::getListItem(int item) const
 jkmpResult jkmpResult::getListItem(int item, const jkmpResult &defaultResult) const
 {
     if (type==jkmpList) {
-        if (item>=0 && item<listData.size() ) return listData[item];
+        if (item>=0 && static_cast<size_t>(item)<listData.size() ) return listData[item];
     }
     return defaultResult;
 }
 
 void jkmpResult::removeListItem(int item) {
     if (type==jkmpList) {
-        if (item>=0 && item<listData.size() ) listData.erase(listData.begin()+item);
+        if (item>=0 && static_cast<size_t>(item)<listData.size() ) listData.erase(listData.begin()+item);
     }
 }
 
@@ -605,9 +599,9 @@ void jkmpResult::appendListItem(const jkmpResult& item) {
 
 void jkmpResult::insertListItem(int i, const jkmpResult& item) {
     if (type==jkmpList) {
-        if (i>=0 && i<listData.size() ) listData.insert(listData.begin()+i, item);
+        if (i>=0 && static_cast<size_t>(i)<listData.size() ) listData.insert(listData.begin()+i, item);
         else if (i<0) listData.push_front(item);
-        else if (i>=listData.size()) listData.push_back(item);
+        else if (static_cast<size_t>(i)>=listData.size()) listData.push_back(item);
     }
 }
 

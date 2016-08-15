@@ -176,8 +176,8 @@ struct JKMPLIB_EXPORT jkmpResult {
 
         JKMPLIB_EXPORT void setDouble(double val);
         JKMPLIB_EXPORT void setBoolean(bool val);
-        JKMPLIB_EXPORT void setString(const std::string& val);
-        JKMPLIB_EXPORT void setString(int size=0, char defaultChar=char(' '));
+        JKMPLIB_EXPORT void setString(const JKMP::stringType& val);
+        JKMPLIB_EXPORT void setString(int size=0, JKMP::charType defaultChar=JKMP::charType(' '));
         JKMPLIB_EXPORT void setDoubleVec(const std::vector<double>& val);
         JKMPLIB_EXPORT void setDoubleVec(int size=0, double defaultVal=0.0);
         JKMPLIB_EXPORT void setDoubleMatrix(int size=0, int cols=1, double  defaultVal=0);

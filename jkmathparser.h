@@ -582,7 +582,7 @@ class JKMPLIB_EXPORT JKMathParser
         class JKMPLIB_EXPORT jkmpBinaryArithmeticNode: public jkmpNode {
           private:
             jkmpNode* left, *right;
-            char operation;
+            JKMP::charType operation;
           public:
             /** \brief constructor for a jkmpBinaryArithmeticNode
              *  \param op the operation to be performed: add (+), subtract (-), multiply (*), divide (/), a to the power of b (a^b)
@@ -591,7 +591,7 @@ class JKMPLIB_EXPORT JKMathParser
              *  \param p a pointer to a JKMathParser object
              *  \param par a pointer to the parent node
              */
-            explicit jkmpBinaryArithmeticNode(char op, jkmpNode* l, jkmpNode* r, JKMathParser* p, jkmpNode* par);
+            explicit jkmpBinaryArithmeticNode(JKMP::charType op, jkmpNode* l, jkmpNode* r, JKMathParser* p, jkmpNode* par);
 
             /** \brief standard destructor, also destroy the children (recursively)  */
             virtual ~jkmpBinaryArithmeticNode();
@@ -617,7 +617,7 @@ class JKMPLIB_EXPORT JKMathParser
         class JKMPLIB_EXPORT jkmpBinaryBoolNode: public jkmpNode {
           private:
             jkmpNode* left, *right;
-            char operation;
+            JKMP::charType operation;
           public:
             /** \brief constructor for a jkmpBinaryBoolNode
              *  \param op the operation to be performed: (a)nd, (o)r, (x)or, (n)or, nand (A)
@@ -626,7 +626,7 @@ class JKMPLIB_EXPORT JKMathParser
              *  \param p a pointer to a JKMathParser object
              *  \param par a pointer to the parent node
              */
-            explicit jkmpBinaryBoolNode(char op, jkmpNode* l, jkmpNode* r, JKMathParser* p, jkmpNode* par);
+            explicit jkmpBinaryBoolNode(JKMP::charType op, jkmpNode* l, jkmpNode* r, JKMathParser* p, jkmpNode* par);
 
             /** \brief standard destructor, also destroy the children (recursively)  */
             virtual ~jkmpBinaryBoolNode();
@@ -652,7 +652,7 @@ class JKMPLIB_EXPORT JKMathParser
         class JKMPLIB_EXPORT jkmpCompareNode: public jkmpNode {
           private:
             jkmpNode* left, *right;
-            char operation;
+            JKMP::charType operation;
           public:
             /** \brief constructor for a jkmpCompareNode
              *  \param op the operation to be performed: != (!), == (=), >= (b), <= (a), (>), (<)
@@ -661,7 +661,7 @@ class JKMPLIB_EXPORT JKMathParser
              *  \param p a pointer to a JKMathParser object
              *  \param par a pointer to the parent node
              */
-            explicit jkmpCompareNode(char op, jkmpNode* l, jkmpNode* r, JKMathParser* p, jkmpNode* par);
+            explicit jkmpCompareNode(JKMP::charType op, jkmpNode* l, jkmpNode* r, JKMathParser* p, jkmpNode* par);
 
             /** \brief standard destructor, also destroy the children (recursively)  */
             virtual ~jkmpCompareNode ();
@@ -688,7 +688,7 @@ class JKMPLIB_EXPORT JKMathParser
         class JKMPLIB_EXPORT jkmpUnaryNode: public jkmpNode {
           private:
             jkmpNode* child;
-            char operation;
+            JKMP::charType operation;
           public:
             /** \brief constructor for a jkmpUnaryNode
              *  \param op the operation to be performed: (!), (-)
@@ -696,7 +696,7 @@ class JKMPLIB_EXPORT JKMathParser
              *  \param p a pointer to a JKMathParser object
              *  \param par a pointer to the parent node
              */
-            explicit jkmpUnaryNode(char op, jkmpNode* c, JKMathParser* p, jkmpNode* par);
+            explicit jkmpUnaryNode(JKMP::charType op, jkmpNode* c, JKMathParser* p, jkmpNode* par);
 
             /** \brief standard destructor, also destroy the children (recursively)  */
             virtual ~jkmpUnaryNode();
@@ -1013,7 +1013,7 @@ class JKMPLIB_EXPORT JKMathParser
          * All error handling has to be done inside the function definition. Here is a
          * simple example:
          * \code
-         * jkmpResult Abs(jkmpResult* params, unsigned char n){
+         * jkmpResult Abs(jkmpResult* params, unsigned JKMP::charType n){
          *   jkmpResult r;
          *   r.type=jkmpDouble;
          *   if (n!=1) jkmpError("abs accepts 1 argument");
@@ -1604,7 +1604,7 @@ class JKMPLIB_EXPORT JKMathParser
          * This functions actually reads pascal style delimited string constants. So if you want to use the delimiter as part of the string you will have to
          * write it as doubled character. So <code>'Jan''s Test'</code> stands for <code>Jan's Test</code>.
          */
-        JKMP::string readDelim(char delimiter);
+        JKMP::string readDelim(JKMP::charType delimiter);
 
 		/** \brief recognizes an compExpression while parsing. If \a get ist \c true, this function first retrieves a new token by calling getToken() */
         jkmpNode* compExpression(bool get);
@@ -1634,7 +1634,7 @@ class JKMPLIB_EXPORT JKMathParser
 		/** \brief this stream is used to read in the program. An object is created and assigned
   		 * (and destroyed) by the parse()-function */
         std::istringstream * program;
-        std::string progStr;
+        JKMP::stringType progStr;
 
         MTRand rng;
 
@@ -1663,9 +1663,9 @@ class JKMPLIB_EXPORT JKMathParser
         JKMP::stringVector lastError;
         int errors;
 
-        char peekStream(std::istream* stream);
-        void putbackStream(std::istream* stream, char ch);
-        bool getFromStream(std::istream* stream, char& ch);
+        JKMP::charType peekStream(std::istream* stream);
+        void putbackStream(std::istream* stream, JKMP::charType ch);
+        bool getFromStream(std::istream* stream, JKMP::charType& ch);
 
         JKMP::map<JKMP::string, void*> m_generalData;
 
@@ -1921,10 +1921,10 @@ class JKMPLIB_EXPORT JKMathParser
         void addStandardFunctions();
 
         /** \brief  parses the given expression*/
-        jkmpNode* parse(std::string prog);
+        jkmpNode* parse(JKMP::stringType prog);
 
         /** \brief evaluate the given expression */
-        jkmpResult evaluate(std::string prog);
+        jkmpResult evaluate(JKMP::stringType prog);
 
         /** \brief  prints a list of all registered variables */
         inline JKMP::string printVariables(){

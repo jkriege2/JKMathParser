@@ -17,15 +17,14 @@
 */
 
 #include "jkmpstringtools.h"
-#include <sstream>
+#include <fstream>
 #include <locale>
 #include <iomanip>
+#include <cmath>
 
 JKMP::string JKMP::_(const string &s)
 {
-    argstring res=s;
-
-    return res;
+    return s;
 }
 
 JKMP::string JKMP::string::arg(const JKMP::string &s1) const
@@ -34,12 +33,11 @@ JKMP::string JKMP::string::arg(const JKMP::string &s1) const
     res.push_back("");
     std::vector<size_t> nums;
     size_t lowestNum=100;
-    char dig1=0;
-    char dig2=0;
+    JKMP::charType dig1=0;
+    JKMP::charType dig2=0;
     const string digs="0123456789";
     for (size_t i=0; i<s1.size(); i++) {
         if (s1[i]=='%' && i+1<s1.size() && digs.contains(s1[i+1])) {
-            const size_t p=i;
             dig1=s1[i];
             i++;
             if (i+1<s1.size() && digs.contains(s1[i+1])) {
@@ -57,7 +55,7 @@ JKMP::string JKMP::string::arg(const JKMP::string &s1) const
                 res.push_back("");
             }
         } else {
-            res.back().push_back(c);
+            res.back().push_back(s1[i]);
         }
     }
 
@@ -99,8 +97,9 @@ JKMP::stringVector JKMP::string::split(const JKMP::string &sep) const
 {
     JKMP::stringVector res;
     size_t pos=0;
+    size_t it=npos;
     do {
-        size_t it=this->find(sep, pos);
+        it=this->find(sep, pos);
         if (it!=npos) {
             if (it==pos) {
                 res.push_back("");
@@ -135,20 +134,20 @@ JKMP::string JKMP::string::trimmed() const
 
 JKMP::string JKMP::string::toLower() const
 {
-    return tolower(*this);
+    return JKMP::toLower(*this);
 }
 
 JKMP::string JKMP::string::toUpper() const
 {
-    return toupper(*this);
+    return JKMP::toUpper(*this);
 }
 
-JKMP::string JKMP::booltostr(bool v) {
+JKMP::string JKMP::boolToStr(bool v) {
     return v?_("true"):_("false");
 }
 
-JKMP::string JKMP::inttostr(int64_t v, int fieldLEngth, char fillc) {
-    std::stringstream s;
+JKMP::string JKMP::intToStr(int64_t v, int fieldLEngth, JKMP::charType fillc) {
+    JKMP::stringstreamType s;
     s.imbue(std::locale("C"));
     if (fieldLEngth>0) s<<std::setw(fieldLEngth);
     s<<std::setfill(fillc);
@@ -156,8 +155,8 @@ JKMP::string JKMP::inttostr(int64_t v, int fieldLEngth, char fillc) {
     return s.str();
 }
 
-JKMP::string JKMP::uinttostr(uint64_t v, int fieldLEngth, char fillc) {
-    std::stringstream s;
+JKMP::string JKMP::uintToStr(uint64_t v, int fieldLEngth, JKMP::charType fillc) {
+    JKMP::stringstreamType s;
     s.imbue(std::locale("C"));
     if (fieldLEngth>0) s<<std::setw(fieldLEngth);
     s<<std::setfill(fillc);
@@ -165,17 +164,19 @@ JKMP::string JKMP::uinttostr(uint64_t v, int fieldLEngth, char fillc) {
     return s.str();
 }
 
-JKMP::string JKMP::floattostr(double v, int past_comma, bool remove_trail0, double belowIsZero)  {
+JKMP::string JKMP::floatToStr(double data, int past_comma, int fieldLEngth, JKMP::charType fillc, bool remove_trail0, double belowIsZero)  {
     if (belowIsZero>0) {
-        if (fabs(data)<belowIsZero) return string("0");
+        if (std::fabs(data)<belowIsZero) return string("0");
     }
-    std::stringstream s;
+    JKMP::stringstreamType s;
     s.imbue(std::locale("C"));
-    s.precision(past_comma);
-    s<<v;
+    if (past_comma>0) s.precision(past_comma);
+    if (fieldLEngth>0) s<<std::setw(fieldLEngth);
+    s<<std::setfill(fillc);
+    s<<data;
     string r=s.str();
 
-    if (remove_trail0 && (tolower(r).find('e')==string::npos)) {
+    if (remove_trail0 && (toLower(r).find('e')==string::npos)) {
         if (data==0) return "0";
         //size_t cp=r.find(".");
         //if (cp<r.size()) return r;
@@ -208,9 +209,9 @@ JKMP::string JKMP::floattostr(double v, int past_comma, bool remove_trail0, doub
 }
 
 
-JKMP::string JKMP::inttohex(uint64_t v, int fieldLEngth, char fillc)
+JKMP::string JKMP::intToHex(uint64_t v, int fieldLEngth, JKMP::charType fillc)
 {
-    std::stringstream s;
+    JKMP::stringstreamType s;
     s.imbue(std::locale("C"));
     s<<std::hex;
     if (fieldLEngth>0) s<<std::setw(fieldLEngth);
@@ -219,20 +220,24 @@ JKMP::string JKMP::inttohex(uint64_t v, int fieldLEngth, char fillc)
     return s.str();
 }
 
-JKMP::string JKMP::inttobin(uint64_t v, int fieldLEngth, char fillc)
+JKMP::string JKMP::intToBin(uint64_t v, int fieldLEngth, JKMP::charType fillc)
 {
-    std::stringstream s;
+    JKMP::stringstreamType s;
     s.imbue(std::locale("C"));
-    s<<std::bin<<v;
+    JKMP::string r;
+    if (v==0) r="v";
+    else {
+        while(v!=0) {r=(v%2==0 ?JKMP::string("0"):JKMP::string("1"))+r; v/=2;}
+    }
     if (fieldLEngth>0) s<<std::setw(fieldLEngth);
     s<<std::setfill(fillc);
-    s<<;
+    s<<r;
     return s.str();
 }
 
-JKMP::string JKMP::inttooct(uint64_t v, int fieldLEngth, char fillc)
+JKMP::string JKMP::intToOct(uint64_t v, int fieldLEngth, JKMP::charType fillc)
 {
-    std::stringstream s;
+    JKMP::stringstreamType s;
     s.imbue(std::locale("C"));
     s<<std::oct;
     if (fieldLEngth>0) s<<std::setw(fieldLEngth);
@@ -242,8 +247,8 @@ JKMP::string JKMP::inttooct(uint64_t v, int fieldLEngth, char fillc)
 }
 
 
-bool JKMP::strtobool(const std::string& data){
-    std::string d=tolower(data);
+bool JKMP::strToBool(const JKMP::stringType& data){
+    JKMP::stringType d=toLower(data);
     if (d=="true") return true;
     if (d=="t") return true;
     if (d=="1") return true;
@@ -256,7 +261,7 @@ bool JKMP::strtobool(const std::string& data){
 }
 
 
-double JKMP::stringtofloat(const std::string& data){
+double JKMP::strToFloat(const JKMP::stringType& data){
     std::istringstream s(data);
     s.imbue(std::locale("C"));
     double v;
@@ -267,8 +272,8 @@ double JKMP::stringtofloat(const std::string& data){
     return v;
 }
 
-std::string JKMP::tolower(const std::string& s){
-  std::string d;
+JKMP::stringType JKMP::toLower(const JKMP::stringType& s){
+  JKMP::stringType d;
   d="";
   std::locale loc;
   if (s.length()>0) {
@@ -279,8 +284,8 @@ std::string JKMP::tolower(const std::string& s){
   return d;
 }
 
-std::string JKMP::toupper(const std::string& s){
-  std::string d;
+JKMP::stringType JKMP::toUpper(const JKMP::stringType& s){
+  JKMP::stringType d;
   d="";
   std::locale loc;
   if (s.length()>0) {
@@ -291,7 +296,7 @@ std::string JKMP::toupper(const std::string& s){
   return d;
 }
 
-int64_t JKMP::stringtoint(const std::string &data) {
+int64_t JKMP::strToInt(const JKMP::stringType &data) {
     std::istringstream s(data);
     s.imbue(std::locale("C"));
     int64_t v;
@@ -304,11 +309,11 @@ int64_t JKMP::stringtoint(const std::string &data) {
 }
 
 
-std::string JKMP::escapify(std::string text){
-  std::string res="";
+JKMP::stringType JKMP::escapify(JKMP::stringType text){
+  JKMP::stringType res="";
   if (text.size()>0) {
     for (size_t i=0; i<text.size(); i++)
-      switch((char)text[i]) {
+      switch((JKMP::charType)text[i]) {
         case '\0': res+="\\0"; break;
         case '\n': res+="\\n"; break;
         case '\r': res+="\\r"; break;
@@ -323,8 +328,8 @@ std::string JKMP::escapify(std::string text){
         case '\e': res+="\\e"; break;
         case '\?': res+="\\?"; break;
         default:
-          if ((unsigned char)text[i]<32) {
-            res+="\\x"+inttohex((unsigned char)text[i], 2, '0');
+          if ((unsigned JKMP::charType)text[i]<32) {
+            res+="\\x"+intToHex((unsigned JKMP::charType)text[i], 2, '0');
           } else res+=text[i];
           break;
       };
@@ -333,8 +338,8 @@ std::string JKMP::escapify(std::string text){
 }
 
 
-std::string JKMP::deescapify(std::string text){
-  std::string res="";
+JKMP::stringType JKMP::deescapify(JKMP::stringType text){
+  JKMP::stringType res="";
   if (text.size()>0) {
     unsigned int i=0;
     while (i<text.size()) {
@@ -342,7 +347,7 @@ std::string JKMP::deescapify(std::string text){
         res+=text[i];
       } else {
         if (i+1<text.size()) {
-          char next=text[i+1];
+          JKMP::charType next=text[i+1];
           switch(next) {
             case '0': res+='\0'; i++; break;
             case 'n': res+='\n'; i++; break;
@@ -360,9 +365,9 @@ std::string JKMP::deescapify(std::string text){
             case 'x':
             case 'X':
               if (i+3<text.size()) {
-                std::string num=text.substr(i+2,2);
+                JKMP::stringType num=text.substr(i+2,2);
                 i+=3;
-                res+=(char)strtol(num.c_str(), NULL, 16);
+                res+=(JKMP::charType)strtol(num.c_str(), NULL, 16);
               } else i++;
               break;
           }
@@ -374,16 +379,16 @@ std::string JKMP::deescapify(std::string text){
   return res;
 }
 
-JKMP::string JKMP::chartostr(char v)
+JKMP::string JKMP::charToStr(JKMP::charType v)
 {
     std::ostringstream ost;
     ost<<v;
     return ost.str();
 }
 
-std::string JKMP::stringVector::join(const std::string &sep) const
+JKMP::stringType JKMP::stringVector::join(const JKMP::stringType &sep) const
 {
-    std::string res;
+    JKMP::stringType res;
     if (size()>0) {
         res=(*this)[0];
     }
@@ -394,12 +399,12 @@ std::string JKMP::stringVector::join(const std::string &sep) const
     return res;
 }
 
-std::string JKMP::readFile(const std::string &fn)
+JKMP::stringType JKMP::readFile(const JKMP::stringType &fn)
 {
-    std::string res;
+    JKMP::stringType res;
     std::ifstream is(fn);     // open file
     if (is) {
-        char c;
+        JKMP::charType c;
         while (is.get(c))   {        // loop getting single characters
             res.push_back(c);
         }
@@ -409,17 +414,73 @@ std::string JKMP::readFile(const std::string &fn)
     return res;
 }
 
-int64_t JKMP::hextoint(const std::string &data)
+int64_t JKMP::hexToInt(const JKMP::stringType &data)
 {
     return strtol(data.c_str(), NULL, 16);
 }
 
-int64_t JKMP::bintoint(const std::string &data)
+int64_t JKMP::binToInt(const JKMP::stringType &data)
 {
     return strtol(data.c_str(), NULL, 2);
 }
 
-int64_t JKMP::octtoint(const std::string &data)
+int64_t JKMP::octToInt(const JKMP::stringType &data)
 {
     return strtol(data.c_str(), NULL, 8);
+}
+
+JKMP::stringType JKMP::doubleVecToStr(const std::vector<double> &value, int prec, const JKMP::stringType itemSeparator)
+{
+    JKMP::stringType out;
+    for (size_t i=0; i<value.size(); i++) {
+        if (i>0) out+=itemSeparator;
+        const JKMP::stringType res=floatToStr(value[i], prec, -1, ' ', false, 1e-307);
+        out+=res;
+    }
+    return out;
+}
+
+JKMP::stringType JKMP::doubleMatrixToStr(const std::vector<double> &value, size_t columns, int prec, const JKMP::stringType &itemSeparator, const JKMP::stringType &columnSeparator)
+{
+    JKMP::stringType out;
+    bool first=true;
+    for (size_t i=0; i<value.size(); i++) {
+        if (!first) out+=itemSeparator;
+        first=false;
+        const JKMP::stringType res=floatToStr(value[i], prec, 2*prec, ' ', false, 1e-307);
+        out+= res;
+        if (i<value.size()-1 && (i%columns)==(columns-1)) {
+            out+=columnSeparator;
+            first=true;
+        }
+    }
+    return out;
+}
+
+JKMP::stringType JKMP::boolMatrixToStr(const std::vector<bool> &value, size_t columns, const JKMP::stringType &itemSeparator, const JKMP::stringType &columnSeparator, const JKMP::stringType &trueName, const JKMP::stringType &falseName)
+{
+    JKMP::stringType out;
+    bool first=true;
+    for (size_t i=0; i<value.size(); i++) {
+        if (!first) out+=itemSeparator;
+        first=false;
+        const JKMP::stringType res=value[i]?trueName:falseName;
+        out+= res;
+        if (i<value.size()-1 && (i%columns)==(columns-1)) {
+            out+=columnSeparator;
+            first=true;
+        }
+    }
+    return out;
+}
+
+JKMP::stringType JKMP::boolVecToStr(const std::vector<bool> &value, const JKMP::stringType itemSeparator, const JKMP::stringType &trueName, const JKMP::stringType &falseName)
+{
+    JKMP::stringType out;
+    for (size_t i=0; i<value.size(); i++) {
+        if (i>0) out+=itemSeparator;
+        const JKMP::stringType res=value[i]?trueName:falseName;
+        out+=res;
+    }
+    return out;
 }

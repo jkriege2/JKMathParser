@@ -34,15 +34,15 @@
 
 namespace JKMathParser_DefaultLib {
 
-    JKMATHPARSER_DEFINE_1PARAM_NUM2STRING_FUNC(fdoubleToStr, num2str, JKMP::floattostr)
-    JKMATHPARSER_DEFINE_1PARAM_NUM2STRING_FUNC(fIntToStr, int2str, JKMP::inttostr)
-    JKMATHPARSER_DEFINE_1PARAM_NUM2STRING_FUNC(fIntToBinStr, int2bin, JKMP::inttobin)
-    JKMATHPARSER_DEFINE_1PARAM_NUM2STRING_FUNC(fIntToHexStr, int2hex, JKMP::inttohex)
-    JKMATHPARSER_DEFINE_1PARAM_NUM2STRING_FUNC(fIntToOctStr, int2oct, JKMP::inttooct)
-    JKMATHPARSER_DEFINE_1PARAM_BOOL2STRING_FUNC(fboolToStr, bool2str, JKMP::booltostr)
+    JKMATHPARSER_DEFINE_1PARAM_NUM2STRING_FUNC(fdoubleToStr, num2str, JKMP::floatToStr)
+    JKMATHPARSER_DEFINE_1PARAM_NUM2STRING_FUNC(fIntToStr, int2str, JKMP::intToStr)
+    JKMATHPARSER_DEFINE_1PARAM_NUM2STRING_FUNC(fIntToBinStr, int2bin, JKMP::intToBin)
+    JKMATHPARSER_DEFINE_1PARAM_NUM2STRING_FUNC(fIntToHexStr, int2hex, JKMP::intToHex)
+    JKMATHPARSER_DEFINE_1PARAM_NUM2STRING_FUNC(fIntToOctStr, int2oct, JKMP::intToOct)
+    JKMATHPARSER_DEFINE_1PARAM_BOOL2STRING_FUNC(fboolToStr, bool2str, JKMP::boolToStr)
 
-    JKMATHPARSER_DEFINE_1PARAM_STRING2NUM_FUNC(fStringToNum, str2num, JKMP::stringtofloat)
-    JKMATHPARSER_DEFINE_1PARAM_STRING2BOOL_FUNC(fStringToBool, str2bool, JKMP::strtobool)
+    JKMATHPARSER_DEFINE_1PARAM_STRING2NUM_FUNC(fStringToNum, str2num, JKMP::strToFloat)
+    JKMATHPARSER_DEFINE_1PARAM_STRING2BOOL_FUNC(fStringToBool, str2bool, JKMP::strToBool)
 
     JKMATHPARSER_DEFINE_1PARAM_NUM2BOOL_FUNC(fIsNan, isnan, std::isnan)
     JKMATHPARSER_DEFINE_1PARAM_NUM2BOOL_FUNC(fIsInf, isinf, std::isinf)
@@ -245,8 +245,8 @@ namespace JKMathParser_DefaultLib {
     void fPrintExpressionTree(jkmpResult& r,  JKMathParser::jkmpNode** params, unsigned int n, JKMathParser* p);
 
     JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fTrimm, trimm, JKMathParser_trimm)
-    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fToLower, tolower, JKMP::tolower)
-    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fToUpper, toupper, JKMP::toupper)
+    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fToLower, tolower, JKMP::toLower)
+    JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fToUpper, toupper, JKMP::toUpper)
 
     JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fReadFile, readfile, JKMP::readFile)
     JKMATHPARSER_DEFINE_1PARAM_STRING_FUNC(fescapify, escapify, JKMP::escapify)

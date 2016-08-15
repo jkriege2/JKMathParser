@@ -30,6 +30,7 @@
 #include <stdint.h>
 #include "jkmplib_imexport.h"
 #include "jkmpstringtools.h"
+#include "jkmpbase.h"
 
 /*!
     \defgroup tools_math_stat QuickFit Statistics tools

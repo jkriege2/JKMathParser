@@ -21,6 +21,13 @@
 namespace JKMP {
     GeneralData GeneralDataDefault = NULL;
 
-
+    std::vector<double> boolvectorToNumVec(const std::vector<bool>& value, double trueValue, double falseValue) {
+        std::vector<double> v;
+        v.reserve(value.size());
+        for (size_t i=0; i<value.size(); i++) {
+            v.push_back(value[i]?trueValue:falseValue);
+        }
+        return v;
+    }
 }
 

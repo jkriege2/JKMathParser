@@ -20,13 +20,14 @@
 #include <sstream>
 #include <locale>
 #include <iomanip>
+#include <unistd.h>
 #ifdef __WINDOWS__
   #include <windows.h>
 #endif
 
-std::string JKMP::extract_file_path(std::string filename) {
+JKMP::stringType JKMP::extract_file_path(JKMP::stringType filename) {
   size_t p=filename.find_last_of(JKMP_PATHSEPARATOR_STRING);
-  if (p==std::string::npos) { // if there is not separator: return nothing. The filname
+  if (p==JKMP::stringType::npos) { // if there is not separator: return nothing. The filname
                               // only consists a filename, no path
     return "";
   } else {
@@ -35,9 +36,9 @@ std::string JKMP::extract_file_path(std::string filename) {
 }
 
 
-std::string JKMP::extract_file_name(std::string filename) {
+JKMP::stringType JKMP::extract_file_name(JKMP::stringType filename) {
   size_t p=filename.find_last_of(JKMP_PATHSEPARATOR_STRING);
-  if (p==std::string::npos) { // if there is not separator: return the complete string,
+  if (p==JKMP::stringType::npos) { // if there is not separator: return the complete string,
                               // <filename> only consists of a filename
     return filename;
   } else {
@@ -46,9 +47,9 @@ std::string JKMP::extract_file_name(std::string filename) {
 }
 
 
-std::string JKMP::extract_file_ext(std::string filename) {
+JKMP::stringType JKMP::extract_file_ext(JKMP::stringType filename) {
   size_t p=filename.find_last_of(".");
-  if (p==std::string::npos) { // if there is not separator: there is no file extension
+  if (p==JKMP::stringType::npos) { // if there is not separator: there is no file extension
     return "";
   } else {
     return filename.substr(p+1);
@@ -56,12 +57,12 @@ std::string JKMP::extract_file_ext(std::string filename) {
 }
 
 
-std::string JKMP::change_file_ext(std::string filename, std::string ext) {
+JKMP::stringType JKMP::change_file_ext(JKMP::stringType filename, JKMP::stringType ext) {
   size_t p=filename.find_last_of(".");
-  std::string ext1=ext;
+  JKMP::stringType ext1=ext;
   if (ext.size()>0)
     if (ext[0]!='.') ext1="."+ext;
-  if (p==std::string::npos) { // if there is not separator: there is no file extension
+  if (p==JKMP::stringType::npos) { // if there is not separator: there is no file extension
     return filename+ext1;
   } else {
     return filename.substr(0,p)+ext1;
@@ -69,40 +70,40 @@ std::string JKMP::change_file_ext(std::string filename, std::string ext) {
 }
 
 
-std::string JKMP::include_trailing_backslash(std::string filename) {
-  std::string ret=filename;
+JKMP::stringType JKMP::include_trailing_backslash(JKMP::stringType filename) {
+  JKMP::stringType ret=filename;
   if (filename.size()>0) {
-    if (filename[filename.size()-1]!=PATHSEPARATOR_CHAR) ret+=JKMP_PATHSEPARATOR_STRING;
+    if (filename[filename.size()-1]!=JKMP_PATHSEPARATOR_CHAR) ret+=JKMP_PATHSEPARATOR_STRING;
   }
   return ret;
 }
 
 
-std::string JKMP::exclude_trailing_backslash(std::string filename) {
-  std::string ret=filename;
+JKMP::stringType JKMP::exclude_trailing_backslash(JKMP::stringType filename) {
+  JKMP::stringType ret=filename;
   if (filename.size()>0) {
-    if (filename[filename.size()-1]==PATHSEPARATOR_CHAR) ret.erase(filename.size()-1,1);
+    if (filename[filename.size()-1]==JKMP_PATHSEPARATOR_CHAR) ret.erase(filename.size()-1,1);
   }
   return ret;
 }
 
-std::string JKMP::extend_file_path(std::string filename, std::string addpath) {
-    std::string path=extract_file_path(filename);
-    std::string file=extract_file_name(filename);
+JKMP::stringType JKMP::extend_file_path(JKMP::stringType filename, JKMP::stringType addpath) {
+    JKMP::stringType path=extract_file_path(filename);
+    JKMP::stringType file=extract_file_name(filename);
     return include_trailing_backslash(include_trailing_backslash(path)+exclude_trailing_backslash(addpath))+file;
 }
 
-std::string JKMP::get_currentworkingdirectory() {
+JKMP::stringType JKMP::get_currentworkingdirectory() {
     size_t size = 1024;
-    std::string res="";
+    JKMP::string res="";
     bool ok=true;
     while (ok) {
         char *buffer = (char *)calloc(size, sizeof(char));
-        if (getcwd(buffer, size) == buffer) {
+        if (_getcwd(buffer, size) == buffer) {
             res=buffer;
             ok=false;
         }
-        //printf("\n--%s--\n", buffer);
+
         free (buffer);
         if (errno != ERANGE) ok=false;
         size *= 2;
@@ -110,12 +111,12 @@ std::string JKMP::get_currentworkingdirectory() {
     return res;
 }
 
-std::string JKMP::get_full_filename(std::string filename){
+JKMP::stringType JKMP::get_full_filename(JKMP::stringType filename){
   #ifndef __WINDOWS__
-    #warning("get_full_filename(std::string filename) was not implemented for non-MS Windows OS!!!");
+    #warning("get_full_filename(JKMP::stringType filename) was not implemented for non-MS Windows OS!!!");
     return filename;
   #else
-  char buffer[8192];
+  JKMP::charType buffer[8192];
   long retval = GetFullPathNameA(filename.c_str(), 8192, buffer, NULL);
   if (retval>0)
     return buffer;
@@ -124,8 +125,8 @@ std::string JKMP::get_full_filename(std::string filename){
   #endif
 }
 
-std::string JKMP::replace_to_system_pathseparator(std::string filename) {
-    std::string fn;
+JKMP::stringType JKMP::replace_to_system_pathseparator(JKMP::stringType filename) {
+    JKMP::stringType fn;
     for (size_t i=0; i<filename.size(); i++) {
         if (filename[i]=='/'||filename[i]=='\\') fn=fn+JKMP_PATHSEPARATOR_STRING;
         else fn=fn+filename[i];

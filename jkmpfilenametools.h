@@ -24,6 +24,8 @@
 
 #include <string>
 #include "jkmplib_imexport.h"
+#include "jkmpbase.h"
+#include "jkmpstringtools.h"
 
 /* This just distinguishes between the different path formats on Windows and Unix:
  *   - on Windows you use a backslash '\' do separate directories
@@ -52,38 +54,38 @@ namespace JKMP {
     /*@{*/
 
     /** \brief extracts the path from the given \a filename */
-    JKMPLIB_EXPORT std::string extract_file_path(std::string filename);
+    JKMPLIB_EXPORT JKMP::stringType extract_file_path(JKMP::stringType filename);
     /** \brief replace slashes and backslashes by the system path separator in \a filename */
-    JKMPLIB_EXPORT std::string replace_to_system_pathseparator(std::string filename);
+    JKMPLIB_EXPORT JKMP::stringType replace_to_system_pathseparator(JKMP::stringType filename);
 
     /** \brief extracts the name from the given \a filename */
-    JKMPLIB_EXPORT std::string extract_file_name(std::string filename);
+    JKMPLIB_EXPORT JKMP::stringType extract_file_name(JKMP::stringType filename);
 
     /** \brief extracts the file extension from the given \a filename */
-    JKMPLIB_EXPORT std::string extract_file_ext(std::string filename);
+    JKMPLIB_EXPORT JKMP::stringType extract_file_ext(JKMP::stringType filename);
 
     /** \brief replaces the extension of the given \a filename with \a ext. \a ext may be given in
      *         the form \c ".ext" or \c "ext".
      */
-    JKMPLIB_EXPORT std::string change_file_ext(std::string filename, std::string ext);
+    JKMPLIB_EXPORT JKMP::stringType change_file_ext(JKMP::stringType filename, JKMP::stringType ext);
 
     /** \brief add another part to the path */
-    JKMPLIB_EXPORT std::string extend_file_path(std::string filename, std::string addpath);
+    JKMPLIB_EXPORT JKMP::stringType extend_file_path(JKMP::stringType filename, JKMP::stringType addpath);
 
     /** \brief takes care that there is a backslash at the end of the given \a filename */
-    JKMPLIB_EXPORT std::string include_trailing_backslash(std::string filename);
+    JKMPLIB_EXPORT JKMP::stringType include_trailing_backslash(JKMP::stringType filename);
 
     /** \brief takes care that there is no backslash at the end of the given \a filename */
-    JKMPLIB_EXPORT std::string exclude_trailing_backslash(std::string filename);
+    JKMPLIB_EXPORT JKMP::stringType exclude_trailing_backslash(JKMP::stringType filename);
 
     /** \brief this method returns the full filename of the file specified in \a filename
      *
      * \attention This method uses system specific code!
      */
-    JKMPLIB_EXPORT std::string get_full_filename(std::string filename);
+    JKMPLIB_EXPORT JKMP::stringType get_full_filename(JKMP::stringType filename);
 
     /** \brief return the current working directory */
-    JKMPLIB_EXPORT std::string get_currentworkingdirectory();
+    JKMPLIB_EXPORT JKMP::stringType get_currentworkingdirectory();
 
 
 

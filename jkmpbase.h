@@ -21,16 +21,22 @@
  */
 #ifndef JKMATHPARSERBASE_H
 #define JKMATHPARSERBASE_H
-
+#include <string>
 #include <vector>
+#include <sstream>
 #include <map>
-
+#include "jkmplib_imexport.h"
 
 namespace JKMP {
 
     typedef void* GeneralData;
+    JKMPLIB_EXPORT extern GeneralData GeneralDataDefault;
 
-    extern GeneralData GeneralDataDefault;
+    typedef std::string stringType;
+    typedef char charType;
+    typedef std::stringstream stringstreamType;
+    typedef std::istringstream istringstreamType;
+    typedef std::ostringstream ostringstreamType;
 
 
 
@@ -245,6 +251,9 @@ namespace JKMP {
         return res;
     }
 
+
+    /** \brief convert a boolean-vector to a vector of doubles */
+    JKMPLIB_EXPORT std::vector<double> boolvectorToNumVec(const std::vector<bool>& value, double trueValue=1.0, double falseValue=0.0);
 
 }
 
