@@ -1,13 +1,70 @@
 #include "../jkmathparser.h"
 #include "../jkmptools.h"
+#include "../libTermcolor/include/termcolor/termcolor.hpp"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "ticktock.h"
 
+#ifdef _WINDOWS_
+#  include <stdio.h>
+#  include <wchar.h>
+#  include <windows.h>
+#  include <Wincon.h>
+#  ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+#    define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+#  endif
+
+
+
+//Returns the last Win32 error, in string format. Returns an empty string if there is no error.
+std::string GetLastErrorAsString()
+{
+    //Get the error message, if any.
+    DWORD errorMessageID = ::GetLastError();
+    if(errorMessageID == 0)
+        return std::string(); //No error message has been recorded
+
+    LPSTR messageBuffer = nullptr;
+    size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                                 NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+
+    std::string message(messageBuffer, size);
+
+    //Free the buffer.
+    LocalFree(messageBuffer);
+
+    return message;
+}
+
+#else
+std::string GetLastErrorAsString()
+{
+    return std::string();
+}
+#endif
 
 
 #define qDebug() std::cout<<std::endl
+
+
+#define TEST_CPP(expr, result, cnt, cntPASS, cntFAIL) {\
+    qDebug()<<"-------------------------------------------------------------------------------------"; \
+    auto res=expr; \
+    qDebug()<<#expr<<"       =  "<<res<<"\n"; \
+    cnt++;\
+    if (res!=result) { \
+            qDebug()<<"   ERROR: result was "<<res<<", but expected "<<result<<"" ;\
+            qDebug()<<"                                                                       "<<termcolor::red<<"FAILED!!!"<<termcolor::reset<<"\n\n" ;\
+            cntFAIL++; \
+    } else {\
+            qDebug()<<"                                                                       "<<termcolor::green<<"PASSED!!!"<<termcolor::reset<<"\n\n" ;\
+            cntPASS++; \
+    }\
+  }
+
+#define TEST_CPP_TRUE(expr, cnt, cntPASS, cntFAIL) TEST_CPP(expr, true, cnt, cntPASS, cntFAIL)
+#define TEST_CPP_FALSE(expr, cnt, cntPASS, cntFAIL) TEST_CPP(expr, false, cnt, cntPASS, cntFAIL)
 
 
 #define TEST_BOOL(expr, boolres, cnt, cntPASS, cntFAIL) {\
@@ -18,16 +75,16 @@
     qDebug()<<expr<<"       =  "<<r.toTypeString()<<"\n"; \
     cnt++;\
     if (parser.hasErrorOccured()) { \
-            qDebug()<<"                                                                       FAILED!!!" ;\
-            qDebug()<<"   ERROR "<<parser.getLastErrors().join("\n    ")<<"\n\n" ;\
+            qDebug()<<"   "<<parser.getLastErrorCount()<<" ERROR: "<<parser.getLastErrors().join("\n    ")<<"" ;\
+            qDebug()<<"                                                                       "<<termcolor::red<<"FAILED!!!"<<termcolor::reset<<"\n\n" ;\
             cntFAIL++; \
     } else {\
         if (r.getType()==jkmpBool && r.boolean==boolres) {\
-            qDebug()<<"                                                                       PASSED!!!\n\n" ;\
+            qDebug()<<"                                                                       "<<termcolor::green<<"PASSED!!!"<<termcolor::reset<<"\n\n" ;\
             cntPASS++; \
         } else {\
-            qDebug()<<"                                                                       FAILED!!!" ;\
-            qDebug()<<"   ERROR: result was "<<r.toTypeString()<<", but expected true [bool]\n\n" ;\
+            qDebug()<<"   ERROR: result was "<<r.toTypeString()<<", but expected true [bool]" ;\
+            qDebug()<<"                                                                       "<<termcolor::red<<"FAILED!!!"<<termcolor::reset<<"\n\n" ;\
             cntFAIL++; \
         }\
     }\
@@ -37,35 +94,43 @@
 #define TEST_FALSE(expr, cnt, cntPASS, cntFAIL) TEST_BOOL(expr, false, cnt, cntPASS, cntFAIL)
 
 
-#define TEST_CMPDBL(expr, expectedresult, cnt, cntPASS, cntFAIL) {\
+#define TEST_CMPDBL_FULL(expr, expectedresult, cnt, cntPASS, cntFAIL, JKMPTYPE, CPPTYPE, GETFUN) {\
     parser.resetErrors(); \
     JKMathParser::jkmpNode* n=parser.parse(expr); \
     jkmpResult r=n->evaluate(); \
     qDebug()<<"-------------------------------------------------------------------------------------"; \
     qDebug()<<expr<<"       =  "<<r.toTypeString()<<"\n"; \
-    const double expected=static_cast<double>(expectedresult); \
+    const CPPTYPE expected=static_cast<CPPTYPE>(expectedresult); \
     cnt++;\
     if (parser.hasErrorOccured()) { \
-            qDebug()<<"                                                                       FAILED!!!" ;\
-            qDebug()<<"   ERROR "<<parser.getLastErrors().join("\n    ")<<"\n\n" ;\
+            qDebug()<<"   "<<parser.getLastErrorCount()<<" ERROR: "<<parser.getLastErrors().join("\n    ")<<"" ;\
+            qDebug()<<"                                                                       "<<termcolor::red<<"FAILED!!!"<<termcolor::reset<<"\n\n" ;\
             cntFAIL++; \
     } else {\
-        if (r.getType()==jkmpDouble && r.num==expected) {\
-            qDebug()<<"                                                                       PASSED!!!\n\n" ;\
+        if (r.getType()==JKMPTYPE && r.GETFUN==expected) {\
+            qDebug()<<"                                                                       "<<termcolor::green<<"PASSED!!!"<<termcolor::reset<<"\n\n" ;\
             cntPASS++; \
         } else {\
-            qDebug()<<"                                                                       FAILED!!!" ;\
-            qDebug()<<"   ERROR: result was "<<r.toTypeString()<<", but expected "<<expected<<" [number]\n\n" ;\
+            qDebug()<<"   ERROR: result was "<<r.toTypeString()<<", but expected "<<expected<<" [" << #JKMPTYPE << "]" ;\
+            qDebug()<<"                                                                       "<<termcolor::red<<"FAILED!!!"<<termcolor::reset<<"\n\n" ;\
             cntFAIL++; \
         }\
     }\
   }
 
+#define TEST_CMPDBL(expr, expectedresult, cnt, cntPASS, cntFAIL) TEST_CMPDBL_FULL(expr, expectedresult, cnt, cntPASS, cntFAIL, jkmpDouble, double, num)
 #define TEST_CMPDBL1(expr, cnt, cntPASS, cntFAIL) TEST_CMPDBL(#expr, expr, cnt, cntPASS, cntFAIL)
+#define TEST_CMPBOOL(expr, expectedresult, cnt, cntPASS, cntFAIL) TEST_CMPDBL_FULL(expr, expectedresult, cnt, cntPASS, cntFAIL, jkmpBool, bool, boolean)
+#define TEST_CMPBOOL1(expr, cnt, cntPASS, cntFAIL) TEST_CMPBOOL(#expr, expr, cnt, cntPASS, cntFAIL)
+#define TEST_CMPSTR(expr, expectedresult, cnt, cntPASS, cntFAIL) TEST_CMPDBL_FULL(expr, expectedresult, cnt, cntPASS, cntFAIL, jkmpString, std::string, str)
+#define TEST_CMPSTR1(expr, cnt, cntPASS, cntFAIL) TEST_CMPSTR(#expr, expr, cnt, cntPASS, cntFAIL)
+#define TEST_CMPSTRVEC(expr, expectedresult, cnt, cntPASS, cntFAIL) TEST_CMPDBL_FULL(expr, expectedresult, cnt, cntPASS, cntFAIL, jkmpStringVector, JKMP::stringVector, strVec)
+#define TEST_CMPBOOLVEC(expr, expectedresult, cnt, cntPASS, cntFAIL) TEST_CMPDBL_FULL(expr, expectedresult, cnt, cntPASS, cntFAIL, jkmpBoolVector, JKMP::vector<bool>, booleanVec)
+#define TEST_CMPDBLVEC(expr, expectedresult, cnt, cntPASS, cntFAIL) TEST_CMPDBL_FULL(expr, expectedresult, cnt, cntPASS, cntFAIL, jkmpDoubleVector, JKMP::vector<double>, numVec)
 
 
 
-#define TEST_CMPERROR(expr, cnt, cntPASS, cntFAIL) {\
+#define TEST_ERROR(expr, cnt, cntPASS, cntFAIL) {\
     parser.resetErrors(); \
     JKMathParser::jkmpNode* n=parser.parse(expr); \
     jkmpResult r=n->evaluate(); \
@@ -73,24 +138,99 @@
     qDebug()<<expr<<"       =  "<<r.toTypeString()<<"\n"; \
     cnt++;\
     if (parser.hasErrorOccured()) { \
-            qDebug()<<"                                                                       PASSED!!!" ;\
-            qDebug()<<"   ERROR "<<parser.getLastErrors().join("\n    ")<<"\n\n" ;\
+            qDebug()<<"   "<<parser.getLastErrorCount()<<" ERROR: "<<parser.getLastErrors().join("\n    ")<<"" ;\
+            qDebug()<<"                                                                       "<<termcolor::green<<"PASSED!!!"<<termcolor::reset<<"\n\n" ;\
             cntPASS++; \
     } else {\
-            qDebug()<<"                                                                       FAILED!!!" ;\
-            qDebug()<<"   ERROR expected, but result was "<<r.toTypeString()<<"\n\n" ;\
+            qDebug()<<"   ERROR expected, but result was "<<r.toTypeString()<<"" ;\
+            qDebug()<<"                                                                       "<<termcolor::red<<"FAILED!!!"<<termcolor::reset<<"\n\n" ;\
             cntFAIL++; \
     }\
   }
 
-int main(int argc, JKMP::charType *argv[])
+
+int main(int /*argc*/, JKMP::charType */*argv*/[])
 {
+
+#ifdef _WINDOWS_
+    // Set output mode to handle virtual terminal sequences
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hOut == INVALID_HANDLE_VALUE)
+    {
+        std::cerr<<"GetStdHandle: "<< GetLastError()<<": "<<GetLastErrorAsString();
+    }
+
+    DWORD dwMode = 0;
+    if (!GetConsoleMode(hOut, &dwMode))
+    {
+        std::cerr<<"GetConsoleMode: "<< GetLastError()<<": "<<GetLastErrorAsString();
+    }
+
+    dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    if (!SetConsoleMode(hOut, dwMode))
+    {
+        std::cerr<<"SetConsoleMode: "<< GetLastError()<<": "<<GetLastErrorAsString();
+    }
+#endif
     JKMathParser parser;
     const double pi=M_PI;
     int cnt=0;
     int cntFAIL=0;
     int cntPASS=0;
 
+    JKMP::stringVector sv;
+    TEST_CPP_TRUE(sv.size()==0, cnt, cntPASS, cntFAIL);
+    sv<<"Hello";
+    TEST_CPP_TRUE(sv.size()==1, cnt, cntPASS, cntFAIL);
+    sv<<"World!";
+    TEST_CPP_TRUE(sv.size()==2, cnt, cntPASS, cntFAIL);
+    TEST_CPP_TRUE(sv.contains("Hello", true), cnt, cntPASS, cntFAIL);
+    TEST_CPP_TRUE(sv.contains("hello", false), cnt, cntPASS, cntFAIL);
+    TEST_CPP_FALSE(sv.contains("hello", true), cnt, cntPASS, cntFAIL);
+    TEST_CPP(sv.join(""), "HelloWorld!", cnt, cntPASS, cntFAIL);
+    TEST_CPP(sv.join(" "), "Hello World!", cnt, cntPASS, cntFAIL);
+
+    JKMP::string s;
+    TEST_CPP_TRUE(s.size()==0, cnt, cntPASS, cntFAIL);
+    s="1234567890";
+    TEST_CPP_TRUE(s.contains('0'), cnt, cntPASS, cntFAIL);
+    TEST_CPP_TRUE(s.contains('2'), cnt, cntPASS, cntFAIL);
+    TEST_CPP_TRUE(s.contains('5'), cnt, cntPASS, cntFAIL);
+    TEST_CPP_FALSE(s.contains('\0'), cnt, cntPASS, cntFAIL);
+    TEST_CPP_FALSE(s.contains('a'), cnt, cntPASS, cntFAIL);
+    s="Hello";
+    TEST_CPP_TRUE(s.size()==5, cnt, cntPASS, cntFAIL);
+    s<<" "<<"World!";
+    TEST_CPP(s, "Hello World!", cnt, cntPASS, cntFAIL);
+    TEST_CPP(s.toLower(), "hello world!", cnt, cntPASS, cntFAIL);
+    TEST_CPP(s.toUpper(), "HELLO WORLD!", cnt, cntPASS, cntFAIL);
+    s="Text%1%2 with 2 args";
+    TEST_CPP(s, "Text%1%2 with 2 args", cnt, cntPASS, cntFAIL);
+    TEST_CPP(s.arg(1).arg(2), "Text12 with 2 args", cnt, cntPASS, cntFAIL);
+    TEST_CPP(s.arg(2).arg(1), "Text21 with 2 args", cnt, cntPASS, cntFAIL);
+    s="1,2,3,4,5";
+    TEST_CPP(s.split(","), JKMP::stringVector::construct("1", "2", "3", "4", "5"), cnt, cntPASS, cntFAIL);
+    TEST_CPP(s.split("."), JKMP::stringVector::construct("1,2,3,4,5"), cnt, cntPASS, cntFAIL);
+    s="1,2,3";
+    TEST_CPP(s.split(","), JKMP::stringVector::construct("1", "2", "3"), cnt, cntPASS, cntFAIL);
+    s="1,2";
+    TEST_CPP(s.split(","), JKMP::stringVector::construct("1", "2"), cnt, cntPASS, cntFAIL);
+    s="1,2,";
+    TEST_CPP(s.split(","), JKMP::stringVector::construct("1", "2", ""), cnt, cntPASS, cntFAIL);
+    s="1";
+    TEST_CPP(s.split(","), JKMP::stringVector::construct("1"), cnt, cntPASS, cntFAIL);
+
+    qDebug()<<"\n\n========================================================================";
+    qDebug()<<" LIBRARY-TEST";
+    qDebug()<<" #TESTS    = "<<cnt;
+    qDebug()<<"   #PASSED = "<<cntPASS;
+    qDebug()<<"   #FAILED = "<<cntFAIL;
+    qDebug()<<"========================================================================\n\n\n";
+
+    //return 0;
+    cnt=0;
+    cntFAIL=0;
+    cntPASS=0;
 
     TEST_CMPDBL("1+2+pi", 1.0+2.0+M_PI, cnt, cntPASS, cntFAIL);
     TEST_CMPDBL("1+2*pi", 1.0+2.0*M_PI, cnt, cntPASS, cntFAIL);
@@ -103,7 +243,7 @@ int main(int argc, JKMP::charType *argv[])
     TEST_CMPDBL1(000.001, cnt, cntPASS, cntFAIL);
     TEST_CMPDBL1(2.8e45, cnt, cntPASS, cntFAIL);
     TEST_CMPDBL1(0b11010, cnt, cntPASS, cntFAIL);
-    TEST_CMPERROR("0b112010", cnt, cntPASS, cntFAIL);
+    TEST_ERROR("0b112010", cnt, cntPASS, cntFAIL);
     TEST_CMPDBL1(0xFF, cnt, cntPASS, cntFAIL);
     TEST_CMPDBL1(0xFF&0x0F, cnt, cntPASS, cntFAIL);
     TEST_CMPDBL1(0xFF&0x0F&0x02, cnt, cntPASS, cntFAIL);
@@ -117,17 +257,101 @@ int main(int argc, JKMP::charType *argv[])
     TEST_TRUE("1<=2", cnt, cntPASS, cntFAIL);
     TEST_TRUE("1<=1", cnt, cntPASS, cntFAIL);
     TEST_FALSE("1>2", cnt, cntPASS, cntFAIL);
+    TEST_FALSE("1>=2", cnt, cntPASS, cntFAIL);
+    TEST_TRUE("1>=1", cnt, cntPASS, cntFAIL);
+    TEST_TRUE("1.0000001>=1", cnt, cntPASS, cntFAIL);
+    TEST_TRUE("1.0000001>1", cnt, cntPASS, cntFAIL);
     TEST_TRUE("10.0>1", cnt, cntPASS, cntFAIL);
     TEST_TRUE("10.0>=1", cnt, cntPASS, cntFAIL);
     TEST_TRUE("10.0>=10.0", cnt, cntPASS, cntFAIL);
     TEST_TRUE("true==true", cnt, cntPASS, cntFAIL);
     TEST_TRUE("true!=false", cnt, cntPASS, cntFAIL);
-    TEST_CMPERROR("true>false", cnt, cntPASS, cntFAIL);
-    TEST_CMPERROR("true<false", cnt, cntPASS, cntFAIL);
-    TEST_CMPERROR("true>=false", cnt, cntPASS, cntFAIL);
-    TEST_CMPERROR("true<=false", cnt, cntPASS, cntFAIL);
+    TEST_ERROR("true>false", cnt, cntPASS, cntFAIL);
+    TEST_ERROR("true<false", cnt, cntPASS, cntFAIL);
+    TEST_ERROR("true>=false", cnt, cntPASS, cntFAIL);
+    TEST_ERROR("true<=false", cnt, cntPASS, cntFAIL);
+    TEST_TRUE("\"blabla\"==\"blabla\"", cnt, cntPASS, cntFAIL);
+    TEST_FALSE("\"Blabla\"==\"blabla\"", cnt, cntPASS, cntFAIL);
+    TEST_TRUE("\"blabla\"==\"blabla\"", cnt, cntPASS, cntFAIL);
+    TEST_FALSE("\"Blabla\"==\"blabla\"", cnt, cntPASS, cntFAIL);
+    TEST_TRUE("\"abc\"!=\"cba\"", cnt, cntPASS, cntFAIL);
+    TEST_TRUE("\"abc\"<\"cba\"", cnt, cntPASS, cntFAIL);
+    TEST_TRUE("\"abc\"<=\"abc\"", cnt, cntPASS, cntFAIL);
+    TEST_TRUE("\"cba\">\"abc\"", cnt, cntPASS, cntFAIL);
+    TEST_TRUE("\"abc\">=\"abc\"", cnt, cntPASS, cntFAIL);
+    TEST_TRUE("\"abc\"+\"cba\"==\"abccba\"", cnt, cntPASS, cntFAIL);
+    TEST_ERROR("'abc'==\"abc\"", cnt, cntPASS, cntFAIL);
+    TEST_ERROR("\"abc\"-\"cba\"", cnt, cntPASS, cntFAIL);
+    TEST_ERROR("\"abc\"*\"cba\"", cnt, cntPASS, cntFAIL);
+    TEST_ERROR("\"abc\"/\"cba\"", cnt, cntPASS, cntFAIL);
+    TEST_ERROR("\"abc\"&\"cba\"", cnt, cntPASS, cntFAIL);
+    TEST_ERROR("\"abc\"&&\"cba\"", cnt, cntPASS, cntFAIL);
+    TEST_ERROR("\"abc\"|\"cba\"", cnt, cntPASS, cntFAIL);
+    TEST_ERROR("\"abc\"||\"cba\"", cnt, cntPASS, cntFAIL);
+    TEST_TRUE("true&&true", cnt, cntPASS, cntFAIL);
+    TEST_ERROR("true&true", cnt, cntPASS, cntFAIL);
+    TEST_FALSE("true&&false", cnt, cntPASS, cntFAIL);
+    TEST_ERROR("true&false", cnt, cntPASS, cntFAIL);
+    TEST_TRUE("!(true&&false)", cnt, cntPASS, cntFAIL);
+    TEST_CMPBOOL1(true&&false||true, cnt, cntPASS, cntFAIL);
+    TEST_CMPBOOL1((true&&false)||true, cnt, cntPASS, cntFAIL);
+    TEST_CMPBOOL1((!true&&!false)||!true, cnt, cntPASS, cntFAIL);
+    TEST_CMPBOOL1(!true&&!false||!true, cnt, cntPASS, cntFAIL);
+    TEST_CMPBOOL1(true&&false||false, cnt, cntPASS, cntFAIL);
+    TEST_CMPBOOL1(true&&(false||false), cnt, cntPASS, cntFAIL);
+    TEST_CMPBOOL1((true&&false)||false, cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL1((1+2)*3, cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL1(1+(2*3), cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL1(1+2*3, cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL1((1-2)/3.0, cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL1(1-(2/3.0), cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL1(1-2/3.0, cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL1(3*(1-2), cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL1(3*1-2, cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL1((3*1)-2, cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("2^8", 256, cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("2^(8-1)", 128, cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("2^8-1", 255, cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("2^7*2", 256, cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("2^7+2", 130, cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("pi^7.5+2", pow(M_PI, 7.5)+2.0, cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL1(1e-300, cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL1(1e-300+1, cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL1(1e-300+1e-100, cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL1(-1e300+1, cnt, cntPASS, cntFAIL);
+    TEST_TRUE("a=1; b=2; a!=b", cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("a=1; b=2; a+b", 3, cnt, cntPASS, cntFAIL);
+    TEST_ERROR("1&true", cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("a=1; 1&a", 1, cnt, cntPASS, cntFAIL);
+    TEST_TRUE("a=true; a",  cnt, cntPASS, cntFAIL);
+    TEST_TRUE("a=true; a||false",  cnt, cntPASS, cntFAIL);
+    TEST_FALSE("a=true; a&&false",  cnt, cntPASS, cntFAIL);
+    TEST_ERROR("1+\"abc\"",  cnt, cntPASS, cntFAIL);
+    TEST_CMPSTR("a=\"abc\"; a", "abc",  cnt, cntPASS, cntFAIL);
+    TEST_CMPSTR("a=\"abc\"; a+a", "abcabc",  cnt, cntPASS, cntFAIL);
+    TEST_ERROR("a=\"abc\"; a*a",  cnt, cntPASS, cntFAIL);
+    TEST_CMPSTR("a=\"abc\"; toupper(a)", "ABC",  cnt, cntPASS, cntFAIL);
+    TEST_CMPSTR("a=\"aBc\"; toupper(a)+tolower(a)", "ABCabc",  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("[1,2,pi,4,-5.5]", JKMP::vector<double>(1,2,M_PI,4,-5.5),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("a=[1,2,pi,4,-5.5]; a[0]", 1,  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("a=[1,2,pi,4,-5.5]; a[1]", 2,  cnt, cntPASS, cntFAIL);
+    TEST_ERROR("a=[1,2,pi,4,-5.5]; a[0,1]",  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("a=[1,2,pi,4,-5.5]; a[[0,1]]", JKMP::vector<double>(1.0,2.0),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("a=[1,2,pi,4,-5.5]; a[0:2]", JKMP::vector<double>(1,2, M_PI),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("a=[1,2,pi,4,-5.5]; a[[true,true,false,false,true]]", JKMP::vector<double>(1,2,-5.5),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("a=[1,2,pi,4,-5.5]; b=[true,true,false,false,true]; a[b]", JKMP::vector<double>(1,2,-5.5),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("a=[1,2,pi,4,-5.5]; a[[false,false,false,false,false]]", JKMP::vector<double>(),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("1:5", JKMP::vector<double>(1.0,2.0,3.0,4.0,5.0),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("1:2:5", JKMP::vector<double>(1.0,3.0,5.0),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("1:2.2:6", JKMP::vector<double>(1.0,3.2,5.4),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("1:(-2):(-5)", JKMP::vector<double>(1.0,-1,-3,-5),  cnt, cntPASS, cntFAIL);
+    TEST_CMPSTRVEC("a=\"a,B,c\"; split(a, \",\")", JKMP::stringVector::construct("a", "B", "c"),  cnt, cntPASS, cntFAIL);
+    TEST_CMPSTRVEC("a=\"a,B,c\"; split(a, \".\")", JKMP::stringVector::construct("a,B,c"),  cnt, cntPASS, cntFAIL);
+    TEST_ERROR("a=[\"a,B,c\"]; split(a, \",\")",  cnt, cntPASS, cntFAIL);
+    TEST_ERROR("a=[1,2,3]; split(a, \",\")",  cnt, cntPASS, cntFAIL);
 
     qDebug()<<"\n\n========================================================================";
+    qDebug()<<" PARSER-TEST";
     qDebug()<<" #TESTS    = "<<cnt;
     qDebug()<<"   #PASSED = "<<cntPASS;
     qDebug()<<"   #FAILED = "<<cntFAIL;

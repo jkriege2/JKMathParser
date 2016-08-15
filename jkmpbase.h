@@ -24,6 +24,8 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <iostream>
+#include <typeinfo>
 #include <map>
 #include "jkmplib_imexport.h"
 
@@ -57,6 +59,11 @@ namespace JKMP {
             inline vector(const vector& v): my_base(v) {}
 
             inline vector(const std::vector<T>& v): my_base(v) {}
+
+            inline vector(const T& v1, const T& v2): my_base() { my_base::push_back(v1);my_base::push_back(v2); }
+            inline vector(const T& v1, const T& v2, const T& v3): my_base() { my_base::push_back(v1);my_base::push_back(v2);my_base::push_back(v3); }
+            inline vector(const T& v1, const T& v2, const T& v3, const T& v4): my_base() { my_base::push_back(v1);my_base::push_back(v2);my_base::push_back(v3);my_base::push_back(v4); }
+            inline vector(const T& v1, const T& v2, const T& v3, const T& v4, const T& v5): my_base() { my_base::push_back(v1);my_base::push_back(v2);my_base::push_back(v3);my_base::push_back(v4);my_base::push_back(v5); }
 
             static inline vector construct(const T& data) {
                 return vector<T>(1,data);
@@ -126,6 +133,8 @@ namespace JKMP {
             inline void pop_front() {
                 this->erase(this->begin());
             }
+
+
 
     };
 
@@ -255,6 +264,17 @@ namespace JKMP {
     /** \brief convert a boolean-vector to a vector of doubles */
     JKMPLIB_EXPORT std::vector<double> boolvectorToNumVec(const std::vector<bool>& value, double trueValue=1.0, double falseValue=0.0);
 
+}
+
+template <class T>
+inline std::ostream& operator <<(std::ostream& stream, const JKMP::vector<T>& v) {
+    stream<<"JKMP::vector<"<<typeid(T).name()<<">[";
+    for (size_t i=0; i<v.size(); i++) {
+        if (i>0) stream<<", ";
+        stream<<v[i];
+    }
+    stream<<"]";
+    return stream;
 }
 
 #endif // JKMATHPARSERBASE_H

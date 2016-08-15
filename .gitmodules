@@ -2,3 +2,8 @@
 	path = StatisticsTools
 	url = https://github.com/jkriege2/StatisticsTools
 	branch = master
+
+[submodule "libTermcolor"]
+	path = libTermcolor
+	url = https://github.com/ikalnitsky/termcolor
+	branch = master

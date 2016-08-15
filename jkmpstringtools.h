@@ -25,6 +25,7 @@
 #include <vector>
 #include <string>
 #include <stdint.h>
+#include <iostream>
 #include "jkmpbase.h"
 #include "jkmplib_imexport.h"
 
@@ -210,7 +211,12 @@ namespace JKMP {
             inline string right(size_t n) {
                 return substr(size()-n, n);
             }
-
+            inline const std::string& toStdString() const {
+                return dynamic_cast<const std::string&>(*this);
+            }
+            inline std::string& toStdString() {
+                return dynamic_cast<std::string&>(*this);
+            }
     };
 
 
@@ -229,7 +235,12 @@ namespace JKMP {
 
             inline stringVector(const my_base& v): my_base(v) {}
             inline stringVector(const stringVector& v): my_base(v) {}
-            inline stringVector(const string& v): my_base() { push_back(v); }
+            inline stringVector(const string& v): my_base(1,v) {  }
+            static inline stringVector construct(const string& v1) { stringVector v; v<<v1; return v;}
+            static inline stringVector construct(const string& v1, const string& v2) { stringVector v; v<<v1<<v2; return v;}
+            static inline stringVector construct(const string& v1, const string& v2, const string& v3) { stringVector v; v<<v1<<v2<<v3; return v;}
+            static inline stringVector construct(const string& v1, const string& v2, const string& v3, const string& v4) { stringVector v; v<<v1<<v2<<v3<<v4; return v;}
+            static inline stringVector construct(const string& v1, const string& v2, const string& v3, const string& v4, const string& v5) { stringVector v; v<<v1<<v2<<v3<<v4<<v5; return v;}
             inline stringVector(const JKMP::stringType& v): my_base() { push_back(v); }
             inline stringVector(const JKMP::charType* v): my_base() { push_back(v); }
 
@@ -256,8 +267,25 @@ namespace JKMP {
                 return  false;
             }
 
+
+
      };
 
+}
+
+inline std::ostream& operator <<(std::ostream& stream, const JKMP::string& v) {
+    stream<<v.toStdString();
+    return stream;
+}
+
+inline std::ostream& operator <<(std::ostream& stream, const JKMP::stringVector& v) {
+    stream<<"JKMP::stringVector[";
+    for (size_t i=0; i<v.size(); i++) {
+        if (i>0) stream<<", ";
+        stream<<"\""<<v[i]<<"\"";
+    }
+    stream<<"]";
+    return stream;
 }
 
 #endif // JKMATHPARSERSTRINGTOOLS_H

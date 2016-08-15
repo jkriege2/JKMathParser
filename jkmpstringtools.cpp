@@ -20,6 +20,7 @@
 #include <fstream>
 #include <locale>
 #include <iomanip>
+#include <iostream>
 #include <cmath>
 
 JKMP::string JKMP::_(const string &s)
@@ -27,8 +28,10 @@ JKMP::string JKMP::_(const string &s)
     return s;
 }
 
-JKMP::string JKMP::string::arg(const JKMP::string &s1) const
+JKMP::string JKMP::string::arg(const JKMP::string &s_param) const
 {
+    JKMP::string s1=*this;
+    //std::cout<<"\n\n\n### '"<<*this<<"'.arg("<<s1<<")\n";
     stringVector res;
     res.push_back("");
     std::vector<size_t> nums;
@@ -37,27 +40,39 @@ JKMP::string JKMP::string::arg(const JKMP::string &s1) const
     JKMP::charType dig2=0;
     const string digs="0123456789";
     for (size_t i=0; i<s1.size(); i++) {
+        //std::cout<<"   ### s1["<<i<<"] = '"<<s1[i]<<"'\n";
         if (s1[i]=='%' && i+1<s1.size() && digs.contains(s1[i+1])) {
-            dig1=s1[i];
+            dig1=s1[i+1];
+            //std::cout<<"   ### dig1 = "<<dig1<<"\n";
             i++;
             if (i+1<s1.size() && digs.contains(s1[i+1])) {
-                dig2=s1[i];
+                dig2=s1[i+1];
+                //std::cout<<"   ### dig2 = "<<dig2<<"\n";
                 i++;
             }
-            size_t n=dig1;
+            size_t n=dig1-'0';
             if (dig2>0) {
-                n=dig1*10+dig2;
+                n=dig1*10+dig2-'0';
             }
+            //std::cout<<"   ### n = '"<<n<<"\n";
             if (n<lowestNum) {
                 lowestNum=n;
-                nums.push_back(n);
-                res.push_back("%");
-                res.push_back("");
             }
+            nums.push_back(n);
+            res.push_back("%");
+            res.push_back("");
         } else {
             res.back().push_back(s1[i]);
         }
     }
+
+    /*for (size_t i=0; i<res.size(); i++) {
+        std::cout<<"### res["<<i<<"] = '"<<res[i]<<"'\n";
+    }
+    for (size_t i=0; i<nums.size(); i++) {
+        std::cout<<"### nums["<<i<<"] = "<<nums[i]<<"\n";
+    }
+    std::cout<<"### lowestNum = "<<lowestNum<<"\n";*/
 
     if (nums.size()==0) return s1;
 
@@ -66,7 +81,7 @@ JKMP::string JKMP::string::arg(const JKMP::string &s1) const
     for (size_t i=0; i<res.size(); i++) {
         if (res[i]=="%") {
             if (nums[jn]==lowestNum) {
-                ress+=s1;
+                ress+=s_param;
             } else {
                 ress+=("%"+std::to_string(nums[jn]));
             }
@@ -96,20 +111,18 @@ JKMP::string &JKMP::string::replace(const JKMP::string &before, const JKMP::stri
 JKMP::stringVector JKMP::string::split(const JKMP::string &sep) const
 {
     JKMP::stringVector res;
-    size_t pos=0;
-    size_t it=npos;
-    do {
-        it=this->find(sep, pos);
-        if (it!=npos) {
-            if (it==pos) {
-                res.push_back("");
-            } else {
-                res.push_back(this->substr(pos, it));
-            }
-            it+=sep.size();
+    res.push_back("");
+    for (size_t i=0; i<size(); i++) {
+        //std::cout<<"a["<<i<<"] = '"<<(*this)[i]<<"'\n";
+        //std::cout<<"substr("<<i<<", "<<sep.size()<<") = '"<<substr(i, sep.size())<<"'\n";
+        if (this->substr(i, sep.size())==sep) {
+            res.push_back("");
+            i+=(sep.size()-1);
+        } else {
+            res.back().push_back((*this)[i]);
         }
-        pos=it;
-    } while (it!=npos);
+        if (i>=size()) break;
+    }
     return res;
 }
 

@@ -109,7 +109,7 @@ jkmpResult JKMathParser::getInvalidResult()
 
 void JKMathParser::jkmpError(JKMP::string st)
 {
-    //qDebug()<<"##ERROR: "<<st;
+    //std::cerr<<"##ERROR: "<<st;
     lastError.push_back(st);
     errors++;
 }
@@ -544,7 +544,7 @@ JKMathParser::jkmpTokenType JKMathParser::getToken(){
 			}
 			// the parser has found an unknown token. an exception will be thrown
 			//std::cout<<StringValue<<",   "<<ch<<std::endl;
-            jkmpError(JKMP::string("get_next_token: unknown token currentCharacter='%1', currentString='%2'").arg(JKMP::charToStr(ch)).arg(StringValue));
+            jkmpError(JKMP::_("get_next_token: unknown token currentCharacter='%1', currentString='%2'").arg(JKMP::charToStr(ch)).arg(StringValue));
             break;
 	}
     return END;
@@ -802,7 +802,7 @@ JKMathParser::jkmpNode *JKMathParser::primaryOp(bool get)
                         getToken();
                     } else {
                         if (res) delete res;
-                        jkmpError(JKMP::string("parsing primary_op: ']' expected, but '%1' found").arg(currenttokentostring()));
+                        jkmpError(JKMP::_("parsing primary_op: ']' expected, but '%1' found").arg(currenttokentostring()));
                         return new jkmpInvalidNode(this, NULL);
                     }
 
@@ -815,7 +815,7 @@ JKMathParser::jkmpNode *JKMathParser::primaryOp(bool get)
                         getToken();
                     } else {
                         if (res) delete res;
-                        jkmpError(JKMP::string("parsing primary_op: 'NAME' expected in EXPR.NAME (struct access) construct, but '%1' found").arg(currenttokentostring()));
+                        jkmpError(JKMP::_("parsing primary_op: 'NAME' expected in EXPR.NAME (struct access) construct, but '%1' found").arg(currenttokentostring()));
                         return new jkmpInvalidNode(this, NULL);
                     }
 
@@ -1053,7 +1053,7 @@ JKMathParser::jkmpNode* JKMathParser::primary(bool get){
         case LPARENTHESE: { // found primary: ( expression )
             JKMathParser::jkmpNode* expr=logicalExpression(true);
             if (CurrentToken != RPARENTHESE) {
-                jkmpError(JKMP::string("parsing primary: ')' expected, but '%1' found").arg(currenttokentostring()));
+                jkmpError(JKMP::_("parsing primary: ')' expected, but '%1' found").arg(currenttokentostring()));
                 return NULL;
             }
 			getToken(); // swallow ")"
@@ -1088,7 +1088,7 @@ JKMathParser::jkmpNode* JKMathParser::primary(bool get){
                         vl->setIsMatrix(true);
                     }
                     if ((CurrentToken!=RBRACKET)&&(CurrentToken!=COMMA)&&(CurrentToken!=PRINT)) {
-                        jkmpError(JKMP::string("parsing primary (vector construction node '[a,b;c,...]'): ']', ';' or ',' expected, but '%1' found after %2 elements").arg(currenttokentostring()).arg(vl->getCount()));
+                        jkmpError(JKMP::_("parsing primary (vector construction node '[a,b;c,...]'): ']', ';' or ',' expected, but '%1' found after %2 elements").arg(currenttokentostring()).arg(vl->getCount()));
                         return new jkmpInvalidNode(this, NULL);
                     }
                     //qDebug()<<"adding to [...]: "<<vl->getCount()<<". element CurrentToke="<<currenttokentostring();
@@ -1096,7 +1096,7 @@ JKMathParser::jkmpNode* JKMathParser::primary(bool get){
 
 
                 if ( CurrentToken != RBRACKET ) {
-                    jkmpError(JKMP::string("parsing primary (vector construction node '[a,b,...]'): ']' expected, but '%1' found").arg(currenttokentostring()));
+                    jkmpError(JKMP::_("parsing primary (vector construction node '[a,b,...]'): ']' expected, but '%1' found").arg(currenttokentostring()));
                     return new jkmpInvalidNode(this, NULL);
                 }
                 getToken();
@@ -1112,7 +1112,7 @@ JKMathParser::jkmpNode* JKMathParser::primary(bool get){
                     JKMathParser::jkmpNode* parameter=logicalExpression(vl->getCount()>0);
                     vl->add(parameter);
                     if ((CurrentToken!=RBRACE)&&(CurrentToken!=COMMA)) {
-                        jkmpError(JKMP::string("parsing primary (list construction node '{a,b,...}'): '}' or ',' expected, but '%1' found after %2 elements").arg(currenttokentostring()).arg(vl->getCount()));
+                        jkmpError(JKMP::_("parsing primary (list construction node '{a,b,...}'): '}' or ',' expected, but '%1' found after %2 elements").arg(currenttokentostring()).arg(vl->getCount()));
                         return new jkmpInvalidNode(this, NULL);
                     }
                     //qDebug()<<"adding to [...]: "<<vl->getCount()<<". element CurrentToke="<<currenttokentostring();
@@ -1120,7 +1120,7 @@ JKMathParser::jkmpNode* JKMathParser::primary(bool get){
 
 
                 if ( CurrentToken != RBRACE ) {
-                    jkmpError(JKMP::string("parsing primary (list construction node '{a,b,...}'): '}' expected, but '%1' found").arg(currenttokentostring()));
+                    jkmpError(JKMP::_("parsing primary (list construction node '{a,b,...}'): '}' expected, but '%1' found").arg(currenttokentostring()));
                     return new jkmpInvalidNode(this, NULL);
                 }
                 getToken();
