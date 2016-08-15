@@ -129,6 +129,29 @@ std::string GetLastErrorAsString()
 #define TEST_CMPDBLVEC(expr, expectedresult, cnt, cntPASS, cntFAIL) TEST_CMPDBL_FULL(expr, expectedresult, cnt, cntPASS, cntFAIL, jkmpDoubleVector, JKMP::vector<double>, numVec)
 
 
+#define TEST_VOID(expr, cnt, cntPASS, cntFAIL) {\
+    parser.resetErrors(); \
+    JKMathParser::jkmpNode* n=parser.parse(expr); \
+    jkmpResult r=n->evaluate(); \
+    qDebug()<<"-------------------------------------------------------------------------------------"; \
+    qDebug()<<expr<<"       =  "<<r.toTypeString()<<"\n"; \
+    cnt++;\
+    if (parser.hasErrorOccured()) { \
+            qDebug()<<"   "<<parser.getLastErrorCount()<<" ERROR: "<<parser.getLastErrors().join("\n    ")<<"" ;\
+            qDebug()<<"                                                                       "<<termcolor::red<<"FAILED!!!"<<termcolor::reset<<"\n\n" ;\
+            cntFAIL++; \
+    } else {\
+        if (r.getType()==jkmpVoid) {\
+            qDebug()<<"                                                                       "<<termcolor::green<<"PASSED!!!"<<termcolor::reset<<"\n\n" ;\
+            cntPASS++; \
+        } else {\
+            qDebug()<<"   ERROR: result was "<<r.toTypeString()<<", but expected void [void]" ;\
+            qDebug()<<"                                                                       "<<termcolor::red<<"FAILED!!!"<<termcolor::reset<<"\n\n" ;\
+            cntFAIL++; \
+        }\
+    }\
+  }
+
 
 #define TEST_ERROR(expr, cnt, cntPASS, cntFAIL) {\
     parser.resetErrors(); \
@@ -210,6 +233,7 @@ int main(int /*argc*/, JKMP::charType */*argv*/[])
     TEST_CPP(s.arg(2).arg(1), "Text21 with 2 args", cnt, cntPASS, cntFAIL);
     s="1,2,3,4,5";
     TEST_CPP(s.split(","), JKMP::stringVector::construct("1", "2", "3", "4", "5"), cnt, cntPASS, cntFAIL);
+    TEST_CPP(s.split(",").join(","), s, cnt, cntPASS, cntFAIL);
     TEST_CPP(s.split("."), JKMP::stringVector::construct("1,2,3,4,5"), cnt, cntPASS, cntFAIL);
     s="1,2,3";
     TEST_CPP(s.split(","), JKMP::stringVector::construct("1", "2", "3"), cnt, cntPASS, cntFAIL);
@@ -349,6 +373,23 @@ int main(int /*argc*/, JKMP::charType */*argv*/[])
     TEST_CMPSTRVEC("a=\"a,B,c\"; split(a, \".\")", JKMP::stringVector::construct("a,B,c"),  cnt, cntPASS, cntFAIL);
     TEST_ERROR("a=[\"a,B,c\"]; split(a, \",\")",  cnt, cntPASS, cntFAIL);
     TEST_ERROR("a=[1,2,3]; split(a, \",\")",  cnt, cntPASS, cntFAIL);
+    TEST_VOID("ff(x)=x^2",  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("ff(5)", 25,  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("ff(1:5)", JKMP::vector<double>(1,4,9,16,25),  cnt, cntPASS, cntFAIL);
+    TEST_ERROR("ff(true)",  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("ff(5+5)", 100,  cnt, cntPASS, cntFAIL);
+    TEST_VOID("fib(x)=if(x<=1, 1, fib(x-1)+fib(x-2))",  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("fib(8)", 34,  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("fib(9)", 55,  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("fib(10)", 89,  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("fib(5+5)", 89,  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("for(i,1,10,fib(i))", JKMP::vector<double>(1,2,3,5,8,13,21,34,55,89),  cnt, cntPASS, cntFAIL);
+    TEST_VOID("sf(x,y)=if(x>y, x+x+x, y+y)",  cnt, cntPASS, cntFAIL);
+    TEST_CMPSTR("sf(\"aa\", \"bb\")", "bbbb",  cnt, cntPASS, cntFAIL);
+    TEST_CMPSTR("sf(\"cc\", \"bb\")", "cccccc",  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("sf(1,2)", 4, cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("2*sf(9,1)", 54, cnt, cntPASS, cntFAIL);
+    TEST_ERROR("sf(\"9\",1)", cnt, cntPASS, cntFAIL);
 
     qDebug()<<"\n\n========================================================================";
     qDebug()<<" PARSER-TEST";
@@ -358,32 +399,7 @@ int main(int /*argc*/, JKMP::charType */*argv*/[])
     qDebug()<<"========================================================================\n\n\n";
 
         /*qDebug()<<"\n\n"<<parser.printVariables()<<"\n\n";
-        TEST("a=5*5+0.1");
-        TEST("a=5*5+0.2");
-        TEST("b=true&&false");
-        TEST("s1=\"blablaBLA\"");
-        TEST("s2=\"_BLUB12\"");
-        TEST("s=tolower(\"blablaBLA\"+s2)");
-        qDebug()<<"\n\n"<<parser.printVariables()<<"\n\n";
 
-        qDebug()<<"\n\n"<<parser.printFunctions()<<"\n\n";
-        TEST("ff(x)=x^2");
-        TEST("f(x)=ff(x)^2");
-        TEST("s(x)=if(x>0, x+s(x-1), 0)");
-        TEST("fib(x)=if(x<=1, 1, fib(x-1)+fib(x-2))");
-        qDebug()<<"\n\n"<<parser.printFunctions()<<"\n\n";
-        TEST("ff(2)+f(2)");
-
-        TEST("s(0)");
-        TEST("s(1)");
-        TEST("s(2)");
-        TEST("s(5)");
-        TEST("fib(0)");
-        TEST("fib(1)");
-        TEST("fib(2)");
-        TEST("fib(3)");
-        TEST("fib(4)");
-        TEST("fib(5)");
 
         TEST("if(pi==3, \"yes\", \"no\")");
         TEST("if(pi>3, \"is pi\", false)");

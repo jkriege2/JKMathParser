@@ -253,6 +253,16 @@ namespace JKMP {
                 my_base::operator=(v);
                 return *this;
             }
+            inline bool operator==(const my_base& v) const {
+                if (v.size()!=this->size()) return false;
+                for (size_t i=0; i<this->size(); i++) {
+                    if ((*this)[i]!=v[i]) return false;
+                }
+                return true;
+            }
+            inline bool operator!=(const my_base& v) const {
+                return !operator==(v);
+            }
             JKMP::stringType join(const JKMP::stringType& sep) const;
             inline bool contains(const JKMP::stringType& v, bool caseSensitive=true) const {
                 for (size_t i=0; i<this->size(); i++) {

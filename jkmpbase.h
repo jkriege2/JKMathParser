@@ -64,6 +64,11 @@ namespace JKMP {
             inline vector(const T& v1, const T& v2, const T& v3): my_base() { my_base::push_back(v1);my_base::push_back(v2);my_base::push_back(v3); }
             inline vector(const T& v1, const T& v2, const T& v3, const T& v4): my_base() { my_base::push_back(v1);my_base::push_back(v2);my_base::push_back(v3);my_base::push_back(v4); }
             inline vector(const T& v1, const T& v2, const T& v3, const T& v4, const T& v5): my_base() { my_base::push_back(v1);my_base::push_back(v2);my_base::push_back(v3);my_base::push_back(v4);my_base::push_back(v5); }
+            inline vector(const T& v1, const T& v2, const T& v3, const T& v4, const T& v5, const T& v6): my_base() { my_base::push_back(v1);my_base::push_back(v2);my_base::push_back(v3);my_base::push_back(v4);my_base::push_back(v5);my_base::push_back(v6); }
+            inline vector(const T& v1, const T& v2, const T& v3, const T& v4, const T& v5, const T& v6, const T& v7): my_base() { my_base::push_back(v1);my_base::push_back(v2);my_base::push_back(v3);my_base::push_back(v4);my_base::push_back(v5);my_base::push_back(v6);my_base::push_back(v7); }
+            inline vector(const T& v1, const T& v2, const T& v3, const T& v4, const T& v5, const T& v6, const T& v7, const T& v8): my_base() { my_base::push_back(v1);my_base::push_back(v2);my_base::push_back(v3);my_base::push_back(v4);my_base::push_back(v5);my_base::push_back(v6);my_base::push_back(v7);my_base::push_back(v8); }
+            inline vector(const T& v1, const T& v2, const T& v3, const T& v4, const T& v5, const T& v6, const T& v7, const T& v8, const T& v9): my_base() { my_base::push_back(v1);my_base::push_back(v2);my_base::push_back(v3);my_base::push_back(v4);my_base::push_back(v5);my_base::push_back(v6);my_base::push_back(v7);my_base::push_back(v8);my_base::push_back(v9); }
+            inline vector(const T& v1, const T& v2, const T& v3, const T& v4, const T& v5, const T& v6, const T& v7, const T& v8, const T& v9, const T& v10): my_base() { my_base::push_back(v1);my_base::push_back(v2);my_base::push_back(v3);my_base::push_back(v4);my_base::push_back(v5);my_base::push_back(v6);my_base::push_back(v7);my_base::push_back(v8);my_base::push_back(v9);my_base::push_back(v10); }
 
             static inline vector construct(const T& data) {
                 return vector<T>(1,data);
