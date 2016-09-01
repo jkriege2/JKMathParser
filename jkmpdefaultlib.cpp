@@ -198,6 +198,7 @@ void JKMathParser_DefaultLib::addDefaultFunctions(JKMathParser* p)
     p->addFunction("dsort", JKMathParser_DefaultLib::fDSort);
     p->addFunction("count", JKMathParser_DefaultLib::fCountOccurences);
     p->addFunction("sum", JKMathParser_DefaultLib::fSum);
+    p->addFunction("prod", JKMathParser_DefaultLib::fProd);
     p->addFunction("diff", JKMathParser_DefaultLib::fDiff);
     p->addFunction("cumsum", JKMathParser_DefaultLib::fCumSum);
     p->addFunction("cumprod", JKMathParser_DefaultLib::fCumProd);
@@ -1420,8 +1421,7 @@ namespace JKMathParser_DefaultLib {
                     }
                 }
             } else if (params[0].type==jkmpDouble || params[0].type==jkmpDoubleVector) {
-                r.type=jkmpDoubleVector;
-                r.numVec.clear();
+                r.setDoubleVec();
                 for (unsigned int i=0; i<n; i++) {
                     if (params[i].convertsToVector()) {
                         r.numVec<<params[i].asVector();
@@ -1432,8 +1432,7 @@ namespace JKMathParser_DefaultLib {
                     }
                 }
             } else if (params[0].type==jkmpBool || params[0].type==jkmpBoolVector) {
-                r.type=jkmpBoolVector;
-                r.boolVec.clear();
+                r.setBoolVec();
                 for (unsigned int i=0; i<n; i++) {
                     if (params[i].convertsToBoolVector()) {
                         r.boolVec<<params[i].asBoolVector();
@@ -1444,8 +1443,7 @@ namespace JKMathParser_DefaultLib {
                     }
                 }
             } else if (params[0].type==jkmpString || params[0].type==jkmpStringVector) {
-                r.type=jkmpStringVector;
-                r.strVec.clear();
+                r.setStringVec();
                 for (unsigned int i=0; i<n; i++) {
                     if (params[i].convertsToStringVector()) {
                         r.strVec<<params[i].asStrVector();

@@ -464,6 +464,41 @@ static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  
 
 
 
+/*! \brief This macro allows to easily define functions for JKMathParser from a C template-function that
+           is vector->vector or string->string it has to accept JKMP::vector and JKMP::vector as arguments! The result of the parser
+           function will have the same type as the input!
+
+    The resulting function will:
+      - check the number of arguments and their type
+      - apply the C-function to any number parameter
+    .
+
+    \param FName name of the function to declare
+    \param NAME_IN_PARSER name the function should have in the parser (used for error messages only)
+    \param CFUNC name of the C function to call
+*/
+#define JKMATHPARSER_DEFINE_1PARAM_VECTORORSTRING_FUNC(FName, NAME_IN_PARSER, CFUNC) \
+static inline void FName(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p){\
+    if (n!=1) {\
+        p->jkmpError(JKMP::_("%1(x) needs exacptly 1 argument").arg(#NAME_IN_PARSER));\
+        r.setInvalid();\
+        return; \
+    }\
+    if(params[0].type==jkmpDoubleVector) {\
+        r.setDoubleVec(CFUNC(params[0].numVec));\
+    } else if(params[0].type==jkmpStringVector) {\
+        r.setStringVec(CFUNC(params[0].strVec));\
+    } else if(params[0].type==jkmpBoolVector) {\
+        r.setBoolVec(CFUNC(params[0].boolVec));\
+    } else if(params[0].type==jkmpString) {\
+        r.setString(CFUNC(params[0].str));\
+    } else {\
+        p->jkmpError(JKMP::_("%1(x) argument has to be a vector of numbers/booleans/strings, or a string").arg(#NAME_IN_PARSER));\
+        r.setInvalid();\
+    }\
+    return; \
+}
+
 /*! \brief This macro allows to easily define functions for JKMathParser from a C-function that
            is numeric_vector->numeric (std::vector<double> -> double), e.g. qfstatisticsMedian()
 

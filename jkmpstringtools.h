@@ -83,6 +83,7 @@ namespace JKMP {
             typedef typename JKMP::stringType my_base;
             typedef typename my_base::const_iterator const_iterator;
             typedef typename my_base::iterator iterator;
+            typedef typename my_base::value_type value_type;
 
             inline explicit string(): my_base() {}
 

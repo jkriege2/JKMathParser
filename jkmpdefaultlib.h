@@ -105,7 +105,7 @@ namespace JKMathParser_DefaultLib {
         return m;
     }
 
-    JKMATHPARSER_DEFINE_1PARAM_VECTOR_FUNC(fSort, sort, JKMathParser_sort)
+    JKMATHPARSER_DEFINE_1PARAM_VECTORORSTRING_FUNC(fSort, sort, JKMathParser_sort)
 
     template <class T>
     inline bool compareGreaterThan(const T &s1, const T &s2)
@@ -124,6 +124,7 @@ namespace JKMathParser_DefaultLib {
         std::sort(m.begin(), m.end(), compareGreaterThan<bool>);
         return m;
     }
+
     static inline JKMP::stringVector JKMathParser_dsort(const JKMP::stringVector& value) {
         JKMP::stringVector m=value;
         std::sort(m.begin(), m.end(), compareGreaterThan<JKMP::string>);
@@ -131,12 +132,14 @@ namespace JKMathParser_DefaultLib {
     }
 
 
-    JKMATHPARSER_DEFINE_1PARAM_VECTOR_FUNC(fDSort, dsort, JKMathParser_dsort)
+    static inline JKMP::string JKMathParser_dsort(const JKMP::string& value) {
+        JKMP::string m=value;
+        std::sort(m.begin(), m.end(), compareGreaterThan<JKMP::string::value_type>);
+        return m;
+    }
 
 
-    JKMP::vector<double> JKMathParser_shuffleD(const JKMP::vector<double>& value);
-    JKMP::vector<bool> JKMathParser_shuffleB(const JKMP::vector<bool>& value);
-    JKMP::stringVector JKMathParser_shuffleS(const JKMP::stringVector& value);
+    JKMATHPARSER_DEFINE_1PARAM_VECTORORSTRING_FUNC(fDSort, dsort, JKMathParser_dsort)
 
     void fIsValid(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p);
     void fIsVoid(jkmpResult& r, const jkmpResult* params, unsigned int  n, JKMathParser* p);

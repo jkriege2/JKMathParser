@@ -1,9 +1,12 @@
 #include "../jkmathparser.h"
 #include "../jkmptools.h"
+#include "../jkmpmathtools.h"
+#include "../StatisticsTools/statistics_tools.h"
 #include "../libTermcolor/include/termcolor/termcolor.hpp"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <algorithm>
 #include "ticktock.h"
 
 #ifdef _WINDOWS_
@@ -43,6 +46,15 @@ std::string GetLastErrorAsString()
     return std::string();
 }
 #endif
+
+template <class T, typename F>
+T foreach_apply(const T& input, F f) {
+    T res=input;
+    for (auto it=res.begin(); it!=res.end(); ++it) {
+        *it=f(*it);
+    }
+    return res;
+}
 
 
 #define qDebug() std::cout<<std::endl
@@ -125,7 +137,7 @@ std::string GetLastErrorAsString()
 #define TEST_CMPSTR(expr, expectedresult, cnt, cntPASS, cntFAIL) TEST_CMPDBL_FULL(expr, expectedresult, cnt, cntPASS, cntFAIL, jkmpString, std::string, str)
 #define TEST_CMPSTR1(expr, cnt, cntPASS, cntFAIL) TEST_CMPSTR(#expr, expr, cnt, cntPASS, cntFAIL)
 #define TEST_CMPSTRVEC(expr, expectedresult, cnt, cntPASS, cntFAIL) TEST_CMPDBL_FULL(expr, expectedresult, cnt, cntPASS, cntFAIL, jkmpStringVector, JKMP::stringVector, strVec)
-#define TEST_CMPBOOLVEC(expr, expectedresult, cnt, cntPASS, cntFAIL) TEST_CMPDBL_FULL(expr, expectedresult, cnt, cntPASS, cntFAIL, jkmpBoolVector, JKMP::vector<bool>, booleanVec)
+#define TEST_CMPBOOLVEC(expr, expectedresult, cnt, cntPASS, cntFAIL) TEST_CMPDBL_FULL(expr, expectedresult, cnt, cntPASS, cntFAIL, jkmpBoolVector, JKMP::vector<bool>, boolVec)
 #define TEST_CMPDBLVEC(expr, expectedresult, cnt, cntPASS, cntFAIL) TEST_CMPDBL_FULL(expr, expectedresult, cnt, cntPASS, cntFAIL, jkmpDoubleVector, JKMP::vector<double>, numVec)
 
 
@@ -267,6 +279,7 @@ int main(int /*argc*/, JKMP::charType */*argv*/[])
     TEST_CMPDBL1(000.001, cnt, cntPASS, cntFAIL);
     TEST_CMPDBL1(2.8e45, cnt, cntPASS, cntFAIL);
     TEST_CMPDBL1(0b11010, cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL1(~0b11010, cnt, cntPASS, cntFAIL);
     TEST_ERROR("0b112010", cnt, cntPASS, cntFAIL);
     TEST_CMPDBL1(0xFF, cnt, cntPASS, cntFAIL);
     TEST_CMPDBL1(0xFF&0x0F, cnt, cntPASS, cntFAIL);
@@ -390,6 +403,79 @@ int main(int /*argc*/, JKMP::charType */*argv*/[])
     TEST_CMPDBL("sf(1,2)", 4, cnt, cntPASS, cntFAIL);
     TEST_CMPDBL("2*sf(9,1)", 54, cnt, cntPASS, cntFAIL);
     TEST_ERROR("sf(\"9\",1)", cnt, cntPASS, cntFAIL);
+    TEST_CMPSTR("if(pi==3, \"yes\", \"no\")", "no",  cnt, cntPASS, cntFAIL);
+    TEST_CMPBOOL("if(pi>=3, true, \"no\")", true,  cnt, cntPASS, cntFAIL);
+    TEST_CMPSTR("\"1\"+cases(1>1, \" is >1\", 1>0.5, \" is >0.5\", \"else\")", "1 is >0.5",  cnt, cntPASS, cntFAIL);
+    TEST_CMPSTR("x=5; cases(x>0,\"0<x<10\", x>10 && x<100,\"10<x<100\", x>100,\"100<x<1000\", \">1000\")", "0<x<10",  cnt, cntPASS, cntFAIL);
+    TEST_CMPSTR("x=101; cases(x>0,\"0<x<10\", x>10,\"10<x<100\", x>100,\"100<x<1000\", \">1000\")", "0<x<10",  cnt, cntPASS, cntFAIL);
+    TEST_CMPSTR("x=5; cases((x>0) && (x<10),\"0<x<10\", (x>10) && (x<100),\"10<x<100\", (x>100) && (x<1000),\"100<x<1000\", \">1000\")", "0<x<10",  cnt, cntPASS, cntFAIL);
+    TEST_CMPSTR("x=101; cases((x>0) && (x<10),\"0<x<10\", (x>10) && (x<100),\"10<x<100\", (x>100) && (x<1000),\"100<x<1000\", \">1000\")", "100<x<1000",  cnt, cntPASS, cntFAIL);
+    TEST_CMPSTR("x=100; cases((x>0) && (x<10),\"0<x<10\", (x>10) && (x<100),\"10<x<100\", (x>100) && (x<1000),\"100<x<1000\", \">1000\")", ">1000",  cnt, cntPASS, cntFAIL);
+    TEST_CMPSTR("x=10000; cases((x>0) && (x<10),\"0<x<10\", (x>10) && (x<100),\"10<x<100\", (x>100) && (x<1000),\"100<x<1000\", \">1000\")", ">1000",  cnt, cntPASS, cntFAIL);
+    TEST_CMPBOOLVEC("x=[5,99,100,101,1000,10000]; (x>10) && (x<=100)", JKMP::vector<bool>(false,true,true,false,false,false), cnt, cntPASS, cntFAIL);
+    TEST_CMPBOOLVEC("x=[5,99,100,101,1000,10000]; x>10 && x<=100", JKMP::vector<bool>(false,true,true,false,false,false), cnt, cntPASS, cntFAIL);
+    TEST_ERROR("x=[5,99,100,101,1000,10000]; !x>10 && x<=100", cnt, cntPASS, cntFAIL);
+    TEST_CMPBOOLVEC("x=[5,99,100,101,1000,10000]; !(x>10) && x<=100", JKMP::vector<bool>(true,false,false,false,false,false), cnt, cntPASS, cntFAIL);
+    TEST_CMPBOOLVEC("x=[5,99,100,101,1000,10000]; (!(x>10)) && (x<=100)", JKMP::vector<bool>(true,false,false,false,false,false), cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("sin(1:10)", foreach_apply(JKMP::construct_vector_range<double>(1,10,1), sin),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("for(i,1,10,sin(i))", foreach_apply(JKMP::construct_vector_range<double>(1,10,1), sin),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("for(i,1:10,sin(i))", foreach_apply(JKMP::construct_vector_range<double>(1,10,1), sin),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("for(i,1,2,10,cos(i))", foreach_apply(JKMP::construct_vector_range<double>(1,10,2), cos),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("cos(1:2:10)", foreach_apply(JKMP::construct_vector_range<double>(1,10,2), cos),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("[]", JKMP::vector<double>(),  cnt, cntPASS, cntFAIL);
+    TEST_ERROR("vec=1:5; for(vec)", cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("vec=1:5; sum(vec)", 1+2+3+4+5,  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("sum(i,1,5)", 5,  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("vec=1:0.5:5; sum(vec)", 1.0+1.5+2.0+2.5+3.0+3.5+4.0+4.5+5.0,  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("sum(i,1,0.5,5)", 0,  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("sum(i,1:0.5:5,i)", 1.0+1.5+2.0+2.5+3.0+3.5+4.0+4.5+5.0,  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("sum(i,1,0.5,5,i)", 1.0+1.5+2.0+2.5+3.0+3.5+4.0+4.5+5.0,  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("sum(i,1,0.5,5,i^2)", JKMP::sqr(1.0)+JKMP::sqr(1.5)+JKMP::sqr(2.0)+JKMP::sqr(2.5)+JKMP::sqr(3.0)+JKMP::sqr(3.5)+JKMP::sqr(4.0)+JKMP::sqr(4.5)+JKMP::sqr(5.0),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("vec=1:5; prod(vec)", 1*2*3*4*5,  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("prod(i,1,5)", 5,  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("vec=1:0.5:5; prod(vec)", 1.0*1.5*2.0*2.5*3.0*3.5*4.0*4.5*5.0,  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("prod(i,1,0.5,5)", 0,  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("prod(i,1:0.5:5,i)", 1.0*1.5*2.0*2.5*3.0*3.5*4.0*4.5*5.0,  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("prod(i,1,0.5,5,i)", 1.0*1.5*2.0*2.5*3.0*3.5*4.0*4.5*5.0,  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("prod(i,1,0.5,5,i^2)", JKMP::sqr(1.0)*JKMP::sqr(1.5)*JKMP::sqr(2.0)*JKMP::sqr(2.5)*JKMP::sqr(3.0)*JKMP::sqr(3.5)*JKMP::sqr(4.0)*JKMP::sqr(4.5)*JKMP::sqr(5.0),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("0:(pi/5):(2*pi)", JKMP::construct_vector_range<double>(0,2.0*M_PI, M_PI/5.0),  cnt, cntPASS, cntFAIL);
+    TEST_ERROR("0:pi/5:2*pi", cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("0:pi+2*(0:pi)", foreach_apply(JKMP::construct_vector_range<double>(0,M_PI), [](double f) { return f*3.0;}),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("x=0:0.3:10; sum(x)", statisticsSumV(JKMP::construct_vector_range<double>(0,10,0.3)),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("x=0:0.3:10; prod(x)", statisticsProdV(JKMP::construct_vector_range<double>(0,10,0.3)),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("x=0:0.3:10; mean(x)", statisticsAverageV(JKMP::construct_vector_range<double>(0,10,0.3)),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("x=0:0.3:10; var(x)", statisticsVarianceV(JKMP::construct_vector_range<double>(0,10,0.3)),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("x=0:0.3:10; std(x)", sqrt(statisticsVarianceV(JKMP::construct_vector_range<double>(0,10,0.3))),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("x=0:0.3:10; corrcoeff(x, 0:(-0.3):(-10))", statisticsCorrelationCoefficientV(JKMP::construct_vector_range<double>(0,10,0.3), JKMP::construct_vector_range<double>(0,-10,-0.3)),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("median([1])", 1,  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("median([1,2])", 1.5,  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("median([1,2,3])", 2,  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("quantile(1:10,0.25)", 4,  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBL("quantile(1:10,0.75)", 9,  cnt, cntPASS, cntFAIL);
+    TEST_ERROR("quantile(0.75)", cnt, cntPASS, cntFAIL);
+    TEST_ERROR("quantile([]],0.25)", cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("removeall([1,1,1,2,2,3,3,4,5,1], -1)", JKMP::vector<double>(1,1,1,2,2,3,3,4,5,1),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("removeall([1,1,1,2,2,3,3,4,5,1], 1)", JKMP::vector<double>(2,2,3,3,4,5),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("removeall([1,1,1,2,2,3,3,4,5,1], 3)", JKMP::vector<double>(1,1,1,2,2,4,5,1),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("remove(10:(-1):1, 1:3)", JKMP::vector<double>(10,6,5,4,3,2,1),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("remove(10:(-1):1, 0:3)", JKMP::vector<double>(6,5,4,3,2,1),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("reverse(1:10)", JKMP::construct_vector_range<double>(10,1,-1),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("sort(reverse(1:10))", JKMP::construct_vector_range<double>(1,10),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("dsort(reverse(1:10))", JKMP::construct_vector_range<double>(10,1,-1),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("sort([3,2,1])", JKMP::vector<double>::construct(1,2,3),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("sort([3,2])", JKMP::vector<double>::construct(2,3),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("sort([2])", JKMP::vector<double>::construct(2),  cnt, cntPASS, cntFAIL);
+    TEST_ERROR("sort()", cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("sort([])", JKMP::vector<double>(), cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("sort([1,2,3])", JKMP::vector<double>(1,2,3),  cnt, cntPASS, cntFAIL);
+    TEST_CMPSTRVEC("sort([\"a\",\"bb\",\"ccc\"])", JKMP::stringVector::construct("a","bb","ccc"),  cnt, cntPASS, cntFAIL);
+    TEST_CMPSTRVEC("sort([\"bb\",\"a\",\"ccc\"])", JKMP::stringVector::construct("a","bb","ccc"),  cnt, cntPASS, cntFAIL);
+    TEST_CMPSTRVEC("sort([\"bb\",\"a\",\"ccc\"])", JKMP::stringVector::construct("a","bb","ccc"),  cnt, cntPASS, cntFAIL);
+    TEST_CMPSTR("sort(\"bbaaccc\")", JKMP::string("aabbccc"),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("concat(1:2:4, [18,19,20], [3], [1, pi])", JKMP::vector<double>::construct(1,3,18,19,20,3,1,M_PI),  cnt, cntPASS, cntFAIL);
+    TEST_CMPDBLVEC("[1:2:4, [18,19,20],  1, pi, 3:(-1):1]", JKMP::vector<double>::construct(1,3,18,19,20,1,M_PI,3,2,1),  cnt, cntPASS, cntFAIL);
+    TEST_CMPSTR("xx=1:20; sum(i,0,length(xx)-1,int2bin(xx[i])+\"   \")", JKMP::string("1   10   11   100   101   110   111   1000   1001   1010   1011   1100   1101   1110   1111   10000   10001   10010   10011   10100   "),  cnt, cntPASS, cntFAIL);
+    TEST_CMPSTR("xx=1:20; sum(i,0,length(xx)-1,int2hex(xx[i])+\"   \")", JKMP::string("1   2   3   4   5   6   7   8   9   a   b   c   d   e   f   10   11   12   13   14   "),  cnt, cntPASS, cntFAIL);
 
     qDebug()<<"\n\n========================================================================";
     qDebug()<<" PARSER-TEST";
@@ -401,74 +487,6 @@ int main(int /*argc*/, JKMP::charType */*argv*/[])
         /*qDebug()<<"\n\n"<<parser.printVariables()<<"\n\n";
 
 
-        TEST("if(pi==3, \"yes\", \"no\")");
-        TEST("if(pi>3, \"is pi\", false)");
-        TEST("\"1\"+cases(1>1, \" is >1\", 1>0.5, \" is >0.5\", \"else\")");
-
-        TEST("[]");
-        TEST("[1]");
-        TEST("[1,2]");
-        TEST("[f(2),ff(1),pi^2]");
-        TEST("[1,\"bla\"]");
-        TEST("1:1");
-        TEST("vec=1:5");
-        TEST("1:0.5:5");
-        TEST("sum(vec)");
-        TEST("for(vec)");
-
-        TEST("for(i,0,5,i)");
-        TEST("for(i,0:5,i)");
-        TEST("sum(i,0,5,i)");
-        TEST("sum(i,0:5,i)");
-        TEST("for(i,0,2,5,i)");
-        TEST("for(i,0:2:5,i)");
-        TEST("sum(i,0,2,5,i)");
-        TEST("sum(i,0:2:5,i)");
-
-        TEST("for(i,0,5,i^2)");
-        TEST("for(i,0:5,i^2)");
-        TEST("sum(i,0,5,i^2)");
-        TEST("sum(i,0:5,i^2)");
-        TEST("for(i,0,2,5,i^2)");
-        TEST("for(i,0:2:5,i^2)");
-        TEST("sum(i,0,2,5,i^2)");
-        TEST("sum(i,0:2:5,i^2)");
-
-        TEST("prod(i,1,5,i)");
-        TEST("prod(i,1,5,i^2)");
-        TEST("prod(i,1,2,5,i)");
-        TEST("prod(i,1,2,5,i^2)");
-        TEST("for(i,0,5,i^2)");
-        TEST("x=0:(pi/5):(2*pi)");
-        TEST("y=x");
-        TEST("sin(1)");
-        TEST("sin(1:5)");
-        TEST("sin(x)");
-        TEST("cos(x)");
-        TEST("atan2(x,y)");
-        TEST("x=1:10");
-        TEST("sum(x)");
-        TEST("count(x)");
-        TEST("mean(x)");
-        TEST("var(x)");
-        TEST("sqrt(var(x))");
-        TEST("std(x)");
-        TEST("median(x)");
-        TEST("min(x)");
-        TEST("max(x)");
-        TEST("quantile(x,0.25)");
-        TEST("quantile(x,0.75)");
-
-
-        TEST("removeall(x, -1)");
-        TEST("remove(x, 1:3)");
-        TEST("x=1:20");
-        TEST("reverse(x)");
-        TEST("shuffle(x)");
-        TEST("dsort(x)");
-        TEST("sort(x)");
-        TEST("concat(1:2:4, [18,19,20], 3, [1, pi])");
-        TEST("[1:2:4, [18,19,20], 3, 1, pi, 3:(-1):1]");
         TEST("for(i,1,5,if(i<=3,-i,i^3))");
         TEST("xx=~(1:20)");
         TEST("sum(i,0,length(xx)-1,int2bin(xx[i])+\"   \")");

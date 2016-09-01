@@ -26,6 +26,8 @@
 #include <sstream>
 #include <iostream>
 #include <typeinfo>
+#include <type_traits>
+#include <functional>
 #include <map>
 #include "jkmplib_imexport.h"
 
@@ -69,10 +71,17 @@ namespace JKMP {
             inline vector(const T& v1, const T& v2, const T& v3, const T& v4, const T& v5, const T& v6, const T& v7, const T& v8): my_base() { my_base::push_back(v1);my_base::push_back(v2);my_base::push_back(v3);my_base::push_back(v4);my_base::push_back(v5);my_base::push_back(v6);my_base::push_back(v7);my_base::push_back(v8); }
             inline vector(const T& v1, const T& v2, const T& v3, const T& v4, const T& v5, const T& v6, const T& v7, const T& v8, const T& v9): my_base() { my_base::push_back(v1);my_base::push_back(v2);my_base::push_back(v3);my_base::push_back(v4);my_base::push_back(v5);my_base::push_back(v6);my_base::push_back(v7);my_base::push_back(v8);my_base::push_back(v9); }
             inline vector(const T& v1, const T& v2, const T& v3, const T& v4, const T& v5, const T& v6, const T& v7, const T& v8, const T& v9, const T& v10): my_base() { my_base::push_back(v1);my_base::push_back(v2);my_base::push_back(v3);my_base::push_back(v4);my_base::push_back(v5);my_base::push_back(v6);my_base::push_back(v7);my_base::push_back(v8);my_base::push_back(v9);my_base::push_back(v10); }
+            inline static vector<T> construct(const T& v1) { vector<T> res;   res.push_back(v1); return res; }
+            inline static vector<T> construct(const T& v1, const T& v2) { vector<T> res;   res.push_back(v1); res.push_back(v2); return res; }
+            inline static vector<T>  construct(const T& v1, const T& v2, const T& v3) { vector<T> res;   res.push_back(v1); res.push_back(v2); res.push_back(v3); return res; }
+            inline static vector<T>  construct(const T& v1, const T& v2, const T& v3, const T& v4) { vector<T> res;   res.push_back(v1); res.push_back(v2); res.push_back(v3); res.push_back(v4); return res; }
+            inline static vector<T>  construct(const T& v1, const T& v2, const T& v3, const T& v4, const T& v5) { vector<T> res;   res.push_back(v1); res.push_back(v2); res.push_back(v3); res.push_back(v4); res.push_back(v5); return res; }
+            inline static vector<T>  construct(const T& v1, const T& v2, const T& v3, const T& v4, const T& v5, const T& v6) { vector<T> res;   res.push_back(v1); res.push_back(v2); res.push_back(v3); res.push_back(v4); res.push_back(v5); res.push_back(v6); return res; }
+            inline static vector<T>  construct(const T& v1, const T& v2, const T& v3, const T& v4, const T& v5, const T& v6, const T& v7) { vector<T> res;   res.push_back(v1); res.push_back(v2); res.push_back(v3); res.push_back(v4); res.push_back(v5); res.push_back(v6); res.push_back(v7); return res; }
+            inline static vector<T>  construct(const T& v1, const T& v2, const T& v3, const T& v4, const T& v5, const T& v6, const T& v7, const T& v8) { vector<T> res;   res.push_back(v1); res.push_back(v2); res.push_back(v3); res.push_back(v4); res.push_back(v5); res.push_back(v6); res.push_back(v7); res.push_back(v8); return res; }
+            inline static vector<T>  construct(const T& v1, const T& v2, const T& v3, const T& v4, const T& v5, const T& v6, const T& v7, const T& v8, const T& v9) { vector<T> res;   res.push_back(v1); res.push_back(v2); res.push_back(v3); res.push_back(v4); res.push_back(v5); res.push_back(v6); res.push_back(v7); res.push_back(v8); res.push_back(v9); return res; }
+            inline static vector<T>  construct(const T& v1, const T& v2, const T& v3, const T& v4, const T& v5, const T& v6, const T& v7, const T& v8, const T& v9, const T& v10) { vector<T> res;   res.push_back(v1); res.push_back(v2); res.push_back(v3); res.push_back(v4); res.push_back(v5); res.push_back(v6); res.push_back(v7); res.push_back(v8); res.push_back(v9); res.push_back(v10); return res; }
 
-            static inline vector construct(const T& data) {
-                return vector<T>(1,data);
-            }
 
             inline vector& operator=(const vector& v) {
                 my_base::operator=(v);
@@ -143,6 +152,21 @@ namespace JKMP {
 
     };
 
+
+    template <class TT>
+    static inline vector<TT> construct_vector_range(TT start, TT end, TT step=TT(1)) {
+        vector<TT> res;
+        if (end>=start) {
+            for (TT i=start; i<=end; i+=step) {
+                res.push_back(i);
+            }
+        } else if (end<start) {
+            for (TT i=start; i>=end; i+=step) {
+                res.push_back(i);
+            }
+        }
+        return res;
+    }
 
 
 
