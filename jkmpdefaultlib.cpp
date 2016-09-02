@@ -2600,7 +2600,7 @@ namespace JKMathParser_DefaultLib {
         if (params[0].type==jkmpDoubleVector && params[0].size()>0) return jkmpResult(params[0].numVec.back());
         if (params[0].type==jkmpBool) return jkmpResult(params[0].boolean);
         if (params[0].type==jkmpBoolVector && params[0].size()>0) return jkmpResult(params[0].boolVec.back());
-        if (params[0].type==jkmpString) return jkmpResult(params[0].str.back());
+        if (params[0].type==jkmpString) return jkmpResult(JKMP::string(1,params[0].str.back()));
         if (params[0].type==jkmpStringVector && params[0].size()>0) return jkmpResult(params[0].strVec.back());
 
         p->jkmpError("last(x): x had no entries or unrecognized type");
@@ -2619,7 +2619,7 @@ namespace JKMathParser_DefaultLib {
         if (params[0].type==jkmpDoubleVector && params[0].size()>0) return jkmpResult(params[0].numVec.front());
         if (params[0].type==jkmpBool) return jkmpResult(params[0].boolean);
         if (params[0].type==jkmpBoolVector && params[0].size()>0) return jkmpResult(params[0].boolVec.front());
-        if (params[0].type==jkmpString) return jkmpResult(params[0].str.front());
+        if (params[0].type==jkmpString) return jkmpResult(JKMP::string(1,params[0].str.front()));
         if (params[0].type==jkmpStringVector && params[0].size()>0) return jkmpResult(params[0].strVec.front());
 
         p->jkmpError("first(x): x had no entries or unrecognized type");
